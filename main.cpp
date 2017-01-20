@@ -15,6 +15,7 @@ enum class Tok {
     SEMICOLON,
     EQ,
     PLUS,
+    MULT,
     L_DOUBLE,
     T_DOUBLE,
     ID
@@ -48,6 +49,8 @@ Tok Lexer::get_next_tok() {
             return cur_tok = Tok::EQ;
         case '+':
             return cur_tok = Tok::PLUS;
+        case '*':
+            return cur_tok = Tok::MULT;
     }
 
     if(std::isalpha(cur_char)) {
@@ -96,6 +99,8 @@ Tok Lexer::get_next_tok() {
 //---------------------------------------------------------------------------//
 //                                Syntax tree                                //
 //---------------------------------------------------------------------------//
+
+#include <memory>
 
 class Statement {
     public:
@@ -177,6 +182,7 @@ enum class Assoc {
 static std::map<Tok, std::pair<int, Assoc>> binary_precedence{
     {Tok::EQ, {10, Assoc::RIGHT}},
     {Tok::PLUS, {20, Assoc::LEFT}},
+    {Tok::MULT, {30, Assoc::LEFT}}
 };
 
 class Parser {
@@ -213,6 +219,7 @@ std::unique_ptr<Statement> Parser::parse() {
         case Tok::INVALID:
         case Tok::END:
         case Tok::PLUS:
+        case Tok::MULT:
         case Tok::EQ:
             return nullptr;
         case Tok::SEMICOLON:
@@ -309,16 +316,10 @@ std::unique_ptr<Expr> Parser::parse_primary() {
 //---------------------------------------------------------------------------//
 
 int main() {
-    //Lexer lex;
-    //Tok cur_tok = Tok::INVALID;
-
-    //while(cur_tok != Tok::END)
-        //printf("%d", cur_tok = lex.get_next_tok());
-    //printf("\n");
-
     Parser par{Lexer{}};
-    std::unique_ptr<Statement> ast = par.parse();
-    printf("%s;\n", ast->str().c_str());
+    while(std::unique_ptr<Statement> ast = par.parse()) {
+        printf("%s;\n", ast->str().c_str());
+    }
 
     return 0;
 }
