@@ -97,75 +97,172 @@ Tok Lexer::get_next_tok() {
 }
 
 //---------------------------------------------------------------------------//
+//                         Visitor pattern templates                         //
+//---------------------------------------------------------------------------//
+
+#define ABSTR_ACCEPT(visitor_type) \
+    virtual void accept(visitor_type& visitor) = 0
+
+#define ACCEPT(visitor_type) \
+    void accept(visitor_type& visitor) override {visitor.visit(*this);}
+
+#define ABSTR_VISIT(visitable_type) \
+    virtual void visit(visitable_type& visitable) = 0
+
+#define VISIT(visitable_type) \
+    void visit(visitable_type& visitable) override;
+
+//---------------------------------------------------------------------------//
 //                                Syntax tree                                //
 //---------------------------------------------------------------------------//
 
 #include <memory>
 
+class Statement;
+    class Expr;
+        template<typename T> class LiteralExpr;
+        class IdExpr;
+        class BinaryExpr;
+    class VarDecl;
+
+class StatementVis {
+    public:
+        virtual ~StatementVis() = default;
+        ABSTR_VISIT(Expr);
+        ABSTR_VISIT(VarDecl);
+};
+
+class ExprVis {
+    public:
+        virtual ~ExprVis() = default;
+        ABSTR_VISIT(LiteralExpr<double>);
+        ABSTR_VISIT(IdExpr);
+        ABSTR_VISIT(BinaryExpr);
+};
+
 class Statement {
     public:
         virtual ~Statement() = default;
-        virtual std::string str() = 0;
+        ABSTR_ACCEPT(StatementVis);
 };
 
 class Expr : public Statement {
+    public:
+        ABSTR_ACCEPT(ExprVis);
+        ACCEPT(StatementVis);
 };
 
 template<typename T>
 class LiteralExpr : public Expr {
     public:
         LiteralExpr(T val) : val(val) {};
-        std::string str();
+
+        T get_val() const {return val;};
+
+        ACCEPT(ExprVis);
+
     private:
         T val;
 };
 
-template<>
-std::string LiteralExpr<double>::str() {
-    return std::to_string(val);
-}
-
 class IdExpr : public Expr {
     public:
         IdExpr(std::string id) : id(std::move(id)) {};
-        std::string str();
+
+        std::string get_id() const {return id;};
+
+        ACCEPT(ExprVis);
+
     private:
         std::string id;
 };
-
-std::string IdExpr::str() {
-    return id;
-}
 
 class BinaryExpr : public Expr {
     public:
         BinaryExpr(Tok op, std::unique_ptr<Expr> lhs,
                            std::unique_ptr<Expr> rhs)
             : op(op), lhs(std::move(lhs)), rhs(std::move(rhs)) {};
-        std::string str();
+
+        Tok get_op() const {return op;};
+        Expr& get_lhs() const {return *lhs;};
+        Expr& get_rhs() const {return *rhs;};
+
+        ACCEPT(ExprVis);
+
     private:
         Tok op;
         std::unique_ptr<Expr> lhs, rhs;
 };
 
-std::string BinaryExpr::str() {
-    return "("s + lhs->str() + " [Operator "s
-        + std::to_string(static_cast<int>(op)) + "] "s + rhs->str() + ")"s;
-}
-
 class VarDecl : public Statement {
     public:
         VarDecl(Tok type, std::string id, std::unique_ptr<Expr> rhs)
             : type(type), id(std::move(id)), rhs(std::move(rhs)) {};
-        std::string str();
+
+        Tok get_type() {return type;};
+        std::string get_id() {return id;};
+        Expr& get_rhs() {return *rhs;};
+
+        ACCEPT(StatementVis);
+
     private:
         Tok type; // TODO: implement a "type" type for more than just POD types
         std::string id;
         std::unique_ptr<Expr> rhs;
 };
 
-std::string VarDecl::str() {
-    return "double "s + id + " = "s + rhs->str();
+//---------------------------------------------------------------------------//
+//                            Syntax tree output                             //
+//---------------------------------------------------------------------------//
+
+class ExprInfoVis : public ExprVis {
+    public:
+        VISIT(LiteralExpr<double>);
+        VISIT(IdExpr);
+        VISIT(BinaryExpr);
+
+        std::string get_str() {return str;};
+    private:
+        std::string str;
+};
+
+void ExprInfoVis::visit(LiteralExpr<double>& expr) {
+    str = std::to_string(expr.get_val());
+}
+
+void ExprInfoVis::visit(IdExpr& expr) {
+    str = expr.get_id();
+}
+
+void ExprInfoVis::visit(BinaryExpr& expr) {
+    ExprInfoVis lhs, rhs;
+    expr.get_lhs().accept(lhs);
+    expr.get_rhs().accept(rhs);
+    str = "("s + lhs.str + " [Operator "s
+        + std::to_string(static_cast<int>(expr.get_op()))
+        + "] "s + rhs.str + ")"s;
+}
+
+class SynInfoVis : public StatementVis {
+    public:
+        VISIT(Expr);
+        VISIT(VarDecl);
+
+        std::string get_str() {return str;};
+    private:
+        std::string str;
+};
+
+void SynInfoVis::visit(Expr& expr) {
+    ExprInfoVis expr_vis;
+    expr.accept(expr_vis);
+    str = expr_vis.get_str();
+}
+
+void SynInfoVis::visit(VarDecl& expr) {
+    ExprInfoVis expr_vis;
+    expr.get_rhs().accept(expr_vis);
+    str = "double "s + expr.get_id() + " = "s + expr_vis.get_str();
 }
 
 //---------------------------------------------------------------------------//
@@ -318,7 +415,9 @@ std::unique_ptr<Expr> Parser::parse_primary() {
 int main() {
     Parser par{Lexer{}};
     while(std::unique_ptr<Statement> ast = par.parse()) {
-        printf("%s;\n", ast->str().c_str());
+        SynInfoVis vis;
+        ast->accept(vis);
+        printf("%s;\n", vis.get_str().c_str());
     }
 
     return 0;
