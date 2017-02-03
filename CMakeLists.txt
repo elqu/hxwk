@@ -4,6 +4,10 @@ project(Hexenwerk)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
 
+set(CMAKE_CXX_COMPILER "clang++")
+
+configure_file(ycm_extra_conf.py.in "${PROJECT_SOURCE_DIR}/.ycm_extra_conf.py" @ONLY)
+
 add_executable(hxwk main.cpp)
 
 target_compile_options(hxwk PUBLIC "-Wall" "-Wextra" "-pedantic" "-std=c++14"
