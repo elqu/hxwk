@@ -110,7 +110,7 @@ Tok Lexer::get_next_tok() {
     virtual void visit(visitable_type& visitable) = 0
 
 #define VISIT(visitable_type) \
-    void visit(visitable_type& visitable) override;
+    void visit(visitable_type& visitable) override
 
 //---------------------------------------------------------------------------//
 //                                Syntax tree                                //

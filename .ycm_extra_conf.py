@@ -9,7 +9,7 @@ import ycm_core
 flags = [
 '-Wall',
 '-Wextra',
-# '-pedantic'
+'-pedantic',
 '-std=c++14',
 '-stdlib=libc++',
 '-x',
