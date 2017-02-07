@@ -1,3 +1,6 @@
+# YouCompleteMe configuration
+.ycm_extra_conf.py
+
 # Python bytecode
 *.pyc
 

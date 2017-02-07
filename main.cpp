@@ -7,8 +7,6 @@
 
 #include <string>
 
-using namespace std::literals::string_literals;
-
 enum class Tok {
     INVALID,
     END,
@@ -59,7 +57,7 @@ Tok Lexer::get_next_tok() {
             id += cur_char;
         std::ungetc(cur_char, stdin);
 
-        if(id == "double"s)
+        if(id == "double")
             return cur_tok = Tok::T_DOUBLE;
 
         return cur_tok = Tok::ID;
@@ -86,7 +84,7 @@ Tok Lexer::get_next_tok() {
             number += cur_char;
         std::ungetc(cur_char, stdin);
 
-        if(number == "."s)
+        if(number == ".")
             return cur_tok = Tok::INVALID;
 
         l_double = std::stod(number);
@@ -238,9 +236,9 @@ void ExprInfoVis::visit(BinaryExpr& expr) {
     ExprInfoVis lhs, rhs;
     expr.get_lhs().accept(lhs);
     expr.get_rhs().accept(rhs);
-    str = "("s + lhs.str + " [Operator "s
+    str = "(" + lhs.str + " [Operator "
         + std::to_string(static_cast<int>(expr.get_op()))
-        + "] "s + rhs.str + ")"s;
+        + "] " + rhs.str + ")";
 }
 
 class SynInfoVis : public StatementVis {
@@ -262,7 +260,7 @@ void SynInfoVis::visit(Expr& expr) {
 void SynInfoVis::visit(VarDecl& expr) {
     ExprInfoVis expr_vis;
     expr.get_rhs().accept(expr_vis);
-    str = "double "s + expr.get_id() + " = "s + expr_vis.get_str();
+    str = "double " + expr.get_id() + " = " + expr_vis.get_str();
 }
 
 //---------------------------------------------------------------------------//
@@ -270,6 +268,29 @@ void SynInfoVis::visit(VarDecl& expr) {
 //---------------------------------------------------------------------------//
 
 #include <map>
+
+#if __cplusplus < 201402L
+namespace std {
+
+template<class T, class... Args>
+typename std::enable_if<!std::is_array<T>::value, std::unique_ptr<T>>::type
+make_unique(Args&&... args) {
+    return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
+}
+
+template<class T>
+typename std::enable_if<std::is_array<T>::value && std::extent<T>::value == 0,
+                        std::unique_ptr<T>>::type
+make_unique(std::size_t n) {
+    return std::unique_ptr<T>(new typename std::remove_extent<T>::type[n]());
+}
+
+template<class T, class... Args>
+typename std::enable_if<std::extent<T>::value != 0, std::unique_ptr<T>>::type
+make_unique(Args&&... args) = delete;
+
+}
+#endif
 
 enum class Assoc {
     LEFT,
@@ -409,8 +430,64 @@ std::unique_ptr<Expr> Parser::parse_primary() {
 }
 
 //---------------------------------------------------------------------------//
+//                              Code generator                               //
+//---------------------------------------------------------------------------//
+
+// On Ubuntu with the llvm-3.8 package installed, some oddities with libc++
+// lead to offsetof not being defined in cstddef when using C++11, which would
+// lead to an error in llvm/Support/Allocator.h
+#ifndef offsetof
+#define offsetof(t, d) __builtin_offsetof(t, d)
+#endif
+
+#include "llvm/IR/IRBuilder.h"
+#include "llvm/IR/LLVMContext.h"
+#include "llvm/IR/Module.h"
+#include "llvm/IR/Value.h"
+
+class CodeGenerator {
+    public:
+        friend class ExprCodeVis;
+        friend class StatementCodeVis;
+        CodeGenerator(llvm::StringRef name)
+            : builder{context}, module{std::move(name), context} {};
+    private:
+        llvm::LLVMContext context;
+        llvm::IRBuilder<> builder;
+        llvm::Module module;
+        std::map<std::string, llvm::Value*> named_values;
+};
+
+//class ExprCodeVis : public ExprVis {
+    //public:
+        //ExprCodeVis(CodeGenerator& generator) : generator{generator} {};
+        //VISIT(LiteralExpr<double>);
+        //VISIT(IdExpr);
+        //VISIT(BinaryExpr);
+    //private:
+        //CodeGenerator& generator;
+        //llvm::Value *val;
+//};
+
+//void ExprCodeVis::visit(LiteralExpr<double>& expr) {
+    //val = llvm::ConstantFP::get(generator.context,
+                                //llvm::APFloat(expr.get_val()));
+//}
+
+//void ExprCodeVis::visit(IdExpr& expr) {
+//}
+
+//class StatementCodeVis : public StatementVis {
+    //public:
+        //VISIT(Expr);
+        //VISIT(VarDecl);
+    //private:
+//};
+
+//---------------------------------------------------------------------------//
 //                               Main function                               //
 //---------------------------------------------------------------------------//
+
 
 int main() {
     Parser par{Lexer{}};
