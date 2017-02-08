@@ -376,7 +376,6 @@ std::unique_ptr<Expr> Parser::parse_top_expr() {
     if(lex.get_tok() != Tok::SEMICOLON)
         return nullptr;
 
-    lex.get_next_tok();
     return expr;
 }
 
