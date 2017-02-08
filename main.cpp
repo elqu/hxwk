@@ -21,10 +21,10 @@ enum class Tok {
 
 class Lexer {
     public:
-        Tok get_tok() {return cur_tok;};
+        Tok get_tok() const {return cur_tok;};
         Tok get_next_tok();
-        std::string get_id() {return id;};
-        double get_double() {return l_double;};
+        std::string get_id() const {return id;};
+        double get_double() const {return l_double;};
     private:
         Tok cur_tok = Tok::INVALID;
         std::string id;
@@ -197,9 +197,9 @@ class VarDecl : public Statement {
         VarDecl(Tok type, std::string id, std::unique_ptr<Expr> rhs)
             : type(type), id(std::move(id)), rhs(std::move(rhs)) {};
 
-        Tok get_type() {return type;};
-        std::string get_id() {return id;};
-        Expr& get_rhs() {return *rhs;};
+        Tok get_type() const {return type;};
+        std::string get_id() const {return id;};
+        Expr& get_rhs() const {return *rhs;};
 
         ACCEPT(StatementVis);
 
@@ -219,7 +219,7 @@ class ExprInfoVis : public ExprVis {
         VISIT(IdExpr);
         VISIT(BinaryExpr);
 
-        std::string get_str() {return str;};
+        std::string get_str() const {return str;};
     private:
         std::string str;
 };
@@ -246,7 +246,7 @@ class SynInfoVis : public StatementVis {
         VISIT(Expr);
         VISIT(VarDecl);
 
-        std::string get_str() {return str;};
+        std::string get_str() const {return str;};
     private:
         std::string str;
 };
@@ -445,7 +445,7 @@ class IRGenerator {
         friend class IRStatementVis;
         IRGenerator(llvm::StringRef name);
 
-        void print() {module.dump();};
+        void print() const {module.dump();};
         void finish(const IRStatementVis& vis); // TEMPORARY finishing method
     private:
         llvm::LLVMContext context;
