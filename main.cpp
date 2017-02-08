@@ -437,12 +437,16 @@ std::unique_ptr<Expr> Parser::parse_primary() {
 #include "llvm/IR/Module.h"
 #include "llvm/IR/Value.h"
 
-class CodeGenerator {
+class IRStatementVis;
+
+class IRGenerator {
     public:
-        friend class ExprCodeVis;
-        friend class StatementCodeVis;
-        CodeGenerator(llvm::StringRef name)
-            : builder{context}, module{std::move(name), context} {};
+        friend class IRExprVis;
+        friend class IRStatementVis;
+        IRGenerator(llvm::StringRef name);
+
+        void print() {module.dump();};
+        void finish(const IRStatementVis& vis); // TEMPORARY finishing method
     private:
         llvm::LLVMContext context;
         llvm::IRBuilder<> builder;
@@ -450,31 +454,90 @@ class CodeGenerator {
         std::map<std::string, llvm::Value*> named_values;
 };
 
-//class ExprCodeVis : public ExprVis {
-    //public:
-        //ExprCodeVis(CodeGenerator& generator) : generator{generator} {};
-        //VISIT(LiteralExpr<double>);
-        //VISIT(IdExpr);
-        //VISIT(BinaryExpr);
-    //private:
-        //CodeGenerator& generator;
-        //llvm::Value *val;
-//};
+IRGenerator::IRGenerator(llvm::StringRef name)
+    : builder{context}, module{std::move(name), context} {
+    auto *main_type
+        = llvm::FunctionType::get(llvm::Type::getDoubleTy(context), false);
 
-//void ExprCodeVis::visit(LiteralExpr<double>& expr) {
-    //val = llvm::ConstantFP::get(generator.context,
-                                //llvm::APFloat(expr.get_val()));
-//}
+    auto *main_fn = llvm::Function::Create(main_type,
+                                           llvm::Function::ExternalLinkage,
+                                           "main", &module);
 
-//void ExprCodeVis::visit(IdExpr& expr) {
-//}
+    auto *bb = llvm::BasicBlock::Create(context, "entry", main_fn);
+    builder.SetInsertPoint(bb);
+}
 
-//class StatementCodeVis : public StatementVis {
-    //public:
-        //VISIT(Expr);
-        //VISIT(VarDecl);
-    //private:
-//};
+class IRExprVis : public ExprVis {
+    public:
+        IRExprVis(IRGenerator& gen) : gen{gen} {};
+
+        VISIT(LiteralExpr<double>);
+        VISIT(IdExpr);
+        VISIT(BinaryExpr);
+
+        llvm::Value *get_val() const {return val;};
+    private:
+        IRGenerator& gen;
+        llvm::Value *val;
+};
+
+void IRExprVis::visit(LiteralExpr<double>& expr) {
+    val = llvm::ConstantFP::get(gen.context, llvm::APFloat{expr.get_val()});
+}
+
+void IRExprVis::visit(IdExpr& expr) {
+    val = gen.named_values[expr.get_id()];
+}
+
+void IRExprVis::visit(BinaryExpr& expr) {
+    IRExprVis lhs{gen}, rhs{gen};
+    expr.get_lhs().accept(lhs);
+    expr.get_rhs().accept(rhs);
+    if(!lhs.val || !rhs.val) {
+        val = nullptr;
+        return;
+    }
+
+    // TODO: assignment operator
+    switch(expr.get_op()) {
+        case Tok::PLUS:
+            val = gen.builder.CreateFAdd(lhs.val, rhs.val);
+            break;
+        case Tok::MULT:
+            val = gen.builder.CreateFMul(lhs.val, rhs.val);
+            break;
+        default:
+            val = nullptr;
+            break;
+    }
+}
+
+class IRStatementVis : public StatementVis {
+    public:
+        IRStatementVis(IRGenerator& gen) : gen{gen} {};
+
+        VISIT(Expr);
+        VISIT(VarDecl);
+
+        llvm::Value *get_val() const {return val;};
+    private:
+        IRGenerator& gen;
+        llvm::Value *val;
+};
+
+void IRStatementVis::visit(Expr& expr) {
+    IRExprVis expr_vis{gen};
+    expr.accept(expr_vis);
+    val = expr_vis.get_val();
+}
+
+void IRStatementVis::visit(VarDecl& decl) {
+    val = nullptr;
+}
+
+void IRGenerator::finish(const IRStatementVis& vis) {
+    builder.CreateRet(vis.get_val());
+}
 
 //---------------------------------------------------------------------------//
 //                               Main function                               //
@@ -483,11 +546,19 @@ class CodeGenerator {
 
 int main() {
     Parser par{Lexer{}};
+    IRGenerator gen{"top"};
+    IRStatementVis vis_code{gen};
+
     while(std::unique_ptr<Statement> ast = par.parse()) {
-        SynInfoVis vis;
-        ast->accept(vis);
-        printf("%s;\n", vis.get_str().c_str());
+        SynInfoVis vis_info;
+        ast->accept(vis_info);
+        ast->accept(vis_code);
+
+        printf("Info: %s\n", vis_info.get_str().c_str());
     }
+
+    gen.finish(vis_code);
+    gen.print();
 
     return 0;
 }
