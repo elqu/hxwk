@@ -433,13 +433,6 @@ std::unique_ptr<Expr> Parser::parse_primary() {
 //                              Code generator                               //
 //---------------------------------------------------------------------------//
 
-// On Ubuntu with the llvm-3.8 package installed, some oddities with libc++
-// lead to offsetof not being defined in cstddef when using C++11, which would
-// lead to an error in llvm/Support/Allocator.h
-#ifndef offsetof
-#define offsetof(t, d) __builtin_offsetof(t, d)
-#endif
-
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Module.h"
