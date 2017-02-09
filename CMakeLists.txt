@@ -28,7 +28,7 @@ string(STRIP ${llvm_flags_libs_sys} llvm_flags_libs_sys)
 separate_arguments(llvm_flags_libs_sys)
 
 
-add_executable(hxwk main.cpp)
+add_executable(hxwk main.cpp ASTInfo.cpp IRGenerator.cpp Lexer.cpp Parser.cpp)
 
 # The C++14 option is currently being overwritten to C++11 by the LLVM flags.
 # If you desire more modern features, you will have to provide some makeshift
