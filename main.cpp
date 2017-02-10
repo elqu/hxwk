@@ -7,7 +7,7 @@ int main() {
     IRGenerator gen{"top"};
     IRStatementVis vis_code{gen};
 
-    while(std::unique_ptr<Statement> ast = par.parse()) {
+    while (std::unique_ptr<Statement> ast = par.parse()) {
         SynInfoVis vis_info;
         ast->accept(vis_info);
         ast->accept(vis_code);

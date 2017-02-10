@@ -6,24 +6,26 @@
 #include <string>
 
 class ExprInfoVis : public ExprVis {
-    public:
-        VISIT(LiteralExpr<double>);
-        VISIT(IdExpr);
-        VISIT(BinaryExpr);
+  public:
+    VISIT(LiteralExpr<double>);
+    VISIT(IdExpr);
+    VISIT(BinaryExpr);
 
-        std::string get_str() const {return str;};
-    private:
-        std::string str;
+    std::string get_str() const { return str; };
+
+  private:
+    std::string str;
 };
 
 class SynInfoVis : public StatementVis {
-    public:
-        VISIT(Expr);
-        VISIT(VarDecl);
+  public:
+    VISIT(Expr);
+    VISIT(VarDecl);
 
-        std::string get_str() const {return str;};
-    private:
-        std::string str;
+    std::string get_str() const { return str; };
+
+  private:
+    std::string str;
 };
 
 #endif
