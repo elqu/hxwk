@@ -42,7 +42,6 @@ std::unique_ptr<Statement> Parser::parse() {
 }
 
 std::unique_ptr<VarDecl> Parser::parse_var_decl() {
-    Tok op = lex.get_tok();
     Tok cur_tok = lex.get_next_tok();
     if (cur_tok != Tok::ID)
         return nullptr;
@@ -58,7 +57,7 @@ std::unique_ptr<VarDecl> Parser::parse_var_decl() {
     if (!expr)
         return nullptr;
 
-    return std::make_unique<VarDecl>(op, id, std::move(expr));
+    return std::make_unique<VarDecl>(id, std::move(expr));
 }
 
 std::unique_ptr<Expr> Parser::parse_top_expr() {

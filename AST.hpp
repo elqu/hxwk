@@ -82,17 +82,15 @@ class BinaryExpr : public Expr {
 
 class VarDecl : public Statement {
   public:
-    VarDecl(Tok type, std::string id, std::unique_ptr<Expr> rhs)
-            : type(type), id(std::move(id)), rhs(std::move(rhs)){};
+    VarDecl(std::string id, std::unique_ptr<Expr> rhs)
+            : id(std::move(id)), rhs(std::move(rhs)){};
 
-    Tok get_type() const { return type; };
     std::string get_id() const { return id; };
     Expr &get_rhs() const { return *rhs; };
 
     ACCEPT(StatementVis);
 
   private:
-    Tok type;  // TODO: implement a "type" type for more than just POD types
     std::string id;
     std::unique_ptr<Expr> rhs;
 };
