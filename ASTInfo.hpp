@@ -2,7 +2,7 @@
 #define HXWK_ASTINFO_H
 
 #include "AST.hpp"
-
+#include "VisitorPattern.hpp"
 #include <string>
 
 class ExprInfoVis : public ExprVis {

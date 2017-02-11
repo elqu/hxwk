@@ -1,4 +1,6 @@
 #include "Lexer.hpp"
+#include <cctype>
+#include <cstdio>
 
 Tok Lexer::get_next_tok() {
     if (cur_tok == Tok::END)

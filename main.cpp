@@ -1,6 +1,13 @@
+#include "AST.hpp"
 #include "ASTInfo.hpp"
 #include "IRGenerator.hpp"
+#include "Lexer.hpp"
 #include "Parser.hpp"
+#include "VisitorPattern.hpp"
+#include "llvm/ADT/StringRef.h"
+#include <cstdio>
+#include <memory>
+#include <string>
 
 int main() {
     Parser par{Lexer{}};

@@ -2,13 +2,18 @@
 #define HXWK_IRGENERATOR_H
 
 #include "AST.hpp"
-
+#include "VisitorPattern.hpp"
+#include "llvm/ADT/StringRef.h"
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Module.h"
-#include "llvm/IR/Value.h"
+#include <map>
+#include <string>
 
 class IRStatementVis;
+namespace llvm {
+class Value;
+}
 
 class IRGenerator {
   public:

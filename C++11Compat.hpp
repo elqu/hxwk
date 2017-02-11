@@ -1,7 +1,10 @@
 #ifndef HXWK_CPP11COMPAT_H
 #define HXWK_CPP11COMPAT_H
 
+#include <cstddef>
 #include <memory>
+#include <type_traits>
+#include <utility>
 
 #if __cplusplus < 201402L
 namespace std {

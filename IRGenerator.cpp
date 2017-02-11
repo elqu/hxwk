@@ -1,4 +1,13 @@
 #include "IRGenerator.hpp"
+#include "Lexer.hpp"
+#include "llvm/ADT/APFloat.h"
+#include "llvm/IR/BasicBlock.h"
+#include "llvm/IR/Constants.h"
+#include "llvm/IR/DerivedTypes.h"
+#include "llvm/IR/Function.h"
+#include "llvm/IR/GlobalValue.h"
+#include "llvm/IR/Type.h"
+#include <utility>
 
 IRGenerator::IRGenerator(llvm::StringRef name)
         : builder{context}, module{std::move(name), context} {

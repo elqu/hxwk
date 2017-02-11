@@ -1,9 +1,13 @@
 #ifndef HXWK_PARSER_H
 #define HXWK_PARSER_H
 
-#include "AST.hpp"
-
+#include "Lexer.hpp"
 #include <memory>
+#include <utility>
+
+class Expr;
+class Statement;
+class VarDecl;
 
 enum class Assoc { LEFT, RIGHT };
 

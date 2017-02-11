@@ -3,12 +3,13 @@
 
 #include "Lexer.hpp"
 #include "VisitorPattern.hpp"
-
 #include <memory>
+#include <string>
+#include <utility>
 
-class Statement;
 class Expr;
-template <typename T> class LiteralExpr;
+template <typename T>
+class LiteralExpr;
 class IdExpr;
 class BinaryExpr;
 class VarDecl;
@@ -40,7 +41,8 @@ class Expr : public Statement {
     ACCEPT(StatementVis);
 };
 
-template <typename T> class LiteralExpr : public Expr {
+template <typename T>
+class LiteralExpr : public Expr {
   public:
     LiteralExpr(T val) : val(val){};
 
