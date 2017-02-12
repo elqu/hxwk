@@ -10,7 +10,6 @@
 #include <map>
 #include <string>
 
-class IRStatementVis;
 namespace llvm {
 class Value;
 }
@@ -19,10 +18,11 @@ class IRGenerator {
   public:
     friend class IRExprVis;
     friend class IRStatementVis;
-    IRGenerator(llvm::StringRef name);
+    IRGenerator(llvm::StringRef name)
+            : builder{context}, module{std::move(name), context} {}
 
     void print() const { module.dump(); };
-    void finish(const IRStatementVis &vis);  // TEMPORARY finishing method
+
   private:
     llvm::LLVMContext context;
     llvm::IRBuilder<> builder;
@@ -37,6 +37,7 @@ class IRExprVis : public ExprVis {
     VISIT(LiteralExpr<double>);
     VISIT(IdExpr);
     VISIT(BinaryExpr);
+    VISIT(CallExpr);
 
     llvm::Value *get_val() const { return val; };
 
@@ -51,6 +52,8 @@ class IRStatementVis : public StatementVis {
 
     VISIT(Expr);
     VISIT(VarDecl);
+    VISIT(FnDecl);
+    VISIT(FnDef);
 
     llvm::Value *get_val() const { return val; };
 

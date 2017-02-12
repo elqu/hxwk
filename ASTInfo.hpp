@@ -10,6 +10,7 @@ class ExprInfoVis : public ExprVis {
     VISIT(LiteralExpr<double>);
     VISIT(IdExpr);
     VISIT(BinaryExpr);
+    VISIT(CallExpr);
 
     std::string get_str() const { return str; };
 
@@ -21,6 +22,8 @@ class SynInfoVis : public StatementVis {
   public:
     VISIT(Expr);
     VISIT(VarDecl);
+    VISIT(FnDef);
+    VISIT(FnDecl);
 
     std::string get_str() const { return str; };
 

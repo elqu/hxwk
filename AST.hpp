@@ -6,19 +6,25 @@
 #include <memory>
 #include <string>
 #include <utility>
+#include <vector>
 
 class Expr;
 template <typename T>
 class LiteralExpr;
 class IdExpr;
 class BinaryExpr;
+class CallExpr;
 class VarDecl;
+class FnDecl;
+class FnDef;
 
 class StatementVis {
   public:
     virtual ~StatementVis() = default;
     ABSTR_VISIT(Expr);
     ABSTR_VISIT(VarDecl);
+    ABSTR_VISIT(FnDecl);
+    ABSTR_VISIT(FnDef);
 };
 
 class ExprVis {
@@ -27,6 +33,7 @@ class ExprVis {
     ABSTR_VISIT(LiteralExpr<double>);
     ABSTR_VISIT(IdExpr);
     ABSTR_VISIT(BinaryExpr);
+    ABSTR_VISIT(CallExpr);
 };
 
 class Statement {
@@ -82,6 +89,23 @@ class BinaryExpr : public Expr {
     std::unique_ptr<Expr> lhs, rhs;
 };
 
+class CallExpr : public Expr {
+  public:
+    CallExpr(std::string id, std::vector<std::unique_ptr<Expr>> args)
+            : id(std::move(id)), args(std::move(args)){};
+
+    std::string get_id() const { return id; };
+    const std::vector<std::unique_ptr<Expr>> &get_args() const {
+        return args;
+    };
+
+    ACCEPT(ExprVis);
+
+  private:
+    std::string id;
+    std::vector<std::unique_ptr<Expr>> args;
+};
+
 class VarDecl : public Statement {
   public:
     VarDecl(std::string id, std::unique_ptr<Expr> rhs)
@@ -95,6 +119,38 @@ class VarDecl : public Statement {
   private:
     std::string id;
     std::unique_ptr<Expr> rhs;
+};
+
+class FnDecl : public Statement {
+  public:
+    FnDecl(std::string id, std::vector<std::string> params)
+            : id(std::move(id)), params(std::move(params)){};
+
+    std::string get_id() const { return id; };
+    const std::vector<std::string> &get_params() const { return params; };
+
+    ACCEPT(StatementVis);
+
+  private:
+    std::string id;
+    std::vector<std::string> params;
+};
+
+class FnDef : public Statement {
+  public:
+    using Body_t = std::vector<std::unique_ptr<Statement>>;
+
+    FnDef(std::unique_ptr<FnDecl> decl, Body_t body)
+            : decl(std::move(decl)), body(std::move(body)){};
+
+    FnDecl &get_decl() const { return *decl; };
+    const Body_t &get_body() const { return body; };
+
+    ACCEPT(StatementVis);
+
+  private:
+    std::unique_ptr<FnDecl> decl;
+    Body_t body;
 };
 
 #endif

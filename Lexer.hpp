@@ -6,17 +6,24 @@
 enum class Tok {
     INVALID,
     END,
+    COMMA,
     SEMICOLON,
     EQ,
     PLUS,
     MULT,
     L_DOUBLE,
     T_DOUBLE,
-    ID
+    ID,
+    FN,
+    P_OPEN,
+    P_CLOSE,
+    BR_OPEN,
+    BR_CLOSE
 };
 
 class Lexer {
   public:
+    Lexer() { get_next_tok(); };
     Tok get_tok() const { return cur_tok; };
     Tok get_next_tok();
     std::string get_id() const { return id; };

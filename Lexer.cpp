@@ -13,6 +13,8 @@ Tok Lexer::get_next_tok() {
     switch (cur_char) {
         case EOF:
             return cur_tok = Tok::END;
+        case ',':
+            return cur_tok = Tok::COMMA;
         case ';':
             return cur_tok = Tok::SEMICOLON;
         case '=':
@@ -21,6 +23,14 @@ Tok Lexer::get_next_tok() {
             return cur_tok = Tok::PLUS;
         case '*':
             return cur_tok = Tok::MULT;
+        case '(':
+            return cur_tok = Tok::P_OPEN;
+        case ')':
+            return cur_tok = Tok::P_CLOSE;
+        case '{':
+            return cur_tok = Tok::BR_OPEN;
+        case '}':
+            return cur_tok = Tok::BR_CLOSE;
     }
 
     if (std::isalpha(cur_char)) {
@@ -29,13 +39,16 @@ Tok Lexer::get_next_tok() {
             id += cur_char;
         std::ungetc(cur_char, stdin);
 
+        if (id == "fn")
+            return cur_tok = Tok::FN;
+
         if (id == "double")
             return cur_tok = Tok::T_DOUBLE;
 
         return cur_tok = Tok::ID;
     }
 
-    const bool is_point = cur_char == '.';
+    const bool is_point = (cur_char == '.');
 
     if (std::isdigit(cur_char) || is_point) {
         // TODO: Find out, why the following line doesn't work as intended

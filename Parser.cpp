@@ -19,25 +19,72 @@ std::pair<int, Assoc> Parser::get_precedence(Tok tok) {
 }
 
 std::unique_ptr<Statement> Parser::parse() {
-    if (lex.get_tok() == Tok::END)
+    switch (lex.get_tok()) {
+        case Tok::SEMICOLON:
+            lex.get_next_tok();
+            return parse();
+        case Tok::FN:
+            return parse_fn();
+        default:
+            return nullptr;
+    }
+}
+
+std::unique_ptr<Statement> Parser::parse_fn() {
+    Tok cur_tok = lex.get_next_tok();
+    if (cur_tok != Tok::ID)
+        return nullptr;
+    auto id = lex.get_id();
+
+    if ((cur_tok = lex.get_next_tok()) != Tok::P_OPEN)
         return nullptr;
 
-    Tok cur_tok = lex.get_next_tok();
+    std::vector<std::string> params;
+
+    if ((cur_tok = lex.get_next_tok()) == Tok::ID) {
+        do {
+            params.push_back(lex.get_id());
+        } while ((cur_tok = lex.get_next_tok()) == Tok::COMMA
+                 && (cur_tok = lex.get_next_tok()) == Tok::ID);
+    }
+
+    if (cur_tok != Tok::P_CLOSE)
+        return nullptr;
+
+    if ((cur_tok = lex.get_next_tok()) == Tok::SEMICOLON)
+        return std::make_unique<FnDecl>(std::move(id), std::move(params));
+
+    if (cur_tok != Tok::BR_OPEN)
+        return nullptr;
+
+    std::vector<std::unique_ptr<Statement>> fn_body;
+    lex.get_next_tok();
+    while (lex.get_tok() != Tok::BR_CLOSE) {
+        auto statement = parse_fn_body();
+        if (!statement)
+            return nullptr;
+        fn_body.push_back(std::move(statement));
+    }
+
+    lex.get_next_tok();
+    auto decl = std::make_unique<FnDecl>(std::move(id), std::move(params));
+    return std::make_unique<FnDef>(std::move(decl), std::move(fn_body));
+}
+
+std::unique_ptr<Statement> Parser::parse_fn_body() {
+    Tok cur_tok = lex.get_tok();
 
     switch (cur_tok) {
-        case Tok::INVALID:
-        case Tok::END:
-        case Tok::PLUS:
-        case Tok::MULT:
-        case Tok::EQ:
-            return nullptr;
         case Tok::SEMICOLON:
-            return parse();
+            lex.get_next_tok();
+            return parse_fn_body();
         case Tok::T_DOUBLE:
             return parse_var_decl();
         case Tok::ID:
         case Tok::L_DOUBLE:
             return parse_top_expr();
+        default:
+            return nullptr;
     }
 }
 
@@ -66,6 +113,7 @@ std::unique_ptr<Expr> Parser::parse_top_expr() {
     if (lex.get_tok() != Tok::SEMICOLON)
         return nullptr;
 
+    lex.get_next_tok();
     return expr;
 }
 
@@ -103,17 +151,31 @@ std::unique_ptr<Expr> Parser::parse_expr_rhs(int expr_prec,
 }
 
 std::unique_ptr<Expr> Parser::parse_primary() {
-    std::unique_ptr<Expr> expr;
-
     Tok cur_tok = lex.get_tok();
     if (cur_tok == Tok::L_DOUBLE) {
-        expr = std::make_unique<LiteralExpr<double>>(lex.get_double());
-    } else if (cur_tok == Tok::ID) {
-        expr = std::make_unique<IdExpr>(lex.get_id());
-    } else {
+        auto expr = std::make_unique<LiteralExpr<double>>(lex.get_double());
+        lex.get_next_tok();
+        return std::move(expr);
+    } else if (cur_tok != Tok::ID) {
         return nullptr;
     }
 
     lex.get_next_tok();
-    return expr;
+
+    std::string id = lex.get_id();
+    if (lex.get_tok() != Tok::P_OPEN)
+        return std::make_unique<IdExpr>(std::move(id));
+
+    std::vector<std::unique_ptr<Expr>> args;
+    if ((cur_tok = lex.get_next_tok()) != Tok::P_CLOSE) {
+        do {
+            args.push_back(parse_expr());
+            if (!args.back())
+                return nullptr;
+        } while (lex.get_tok() == Tok::COMMA
+                 && lex.get_next_tok() != Tok::P_CLOSE);
+    }
+
+    lex.get_next_tok();
+    return std::make_unique<CallExpr>(std::move(id), std::move(args));
 }
