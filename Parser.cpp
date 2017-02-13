@@ -11,15 +11,6 @@ static std::map<Tok, std::pair<int, Assoc>> binary_precedence{
         {Tok::PLUS, {20, Assoc::LEFT}},
         {Tok::MULT, {30, Assoc::LEFT}}};
 
-std::pair<int, Assoc> Parser::get_precedence(Tok tok) {
-    auto precedence = binary_precedence[tok];
-
-    if (precedence.first == 0)
-        return {-1, Assoc::LEFT};
-
-    return precedence;
-}
-
 std::unique_ptr<Statement> Parser::parse() {
     switch (lex.get_tok()) {
         case Tok::SEMICOLON:
@@ -129,9 +120,9 @@ std::unique_ptr<Expr> Parser::parse_expr_rhs(int expr_prec,
         Tok op = lex.get_tok();
         int op_prec;
         Assoc lr_ass;
-        std::tie(op_prec, lr_ass) = get_precedence(op);
+        std::tie(op_prec, lr_ass) = binary_precedence[op];
 
-        if (op_prec < expr_prec)
+        if (op_prec == 0 || op_prec < expr_prec)
             return lhs;
 
         lex.get_next_tok();
@@ -141,10 +132,11 @@ std::unique_ptr<Expr> Parser::parse_expr_rhs(int expr_prec,
             return nullptr;
 
         Tok new_op = lex.get_tok();
-        int new_op_prec = get_precedence(new_op).first;
+        int new_op_prec = binary_precedence[new_op].first;
 
         if (new_op_prec > op_prec
-            || (new_op_prec == op_prec && lr_ass == Assoc::RIGHT)) {
+            || (new_op_prec != 0 && new_op_prec == op_prec
+                && lr_ass == Assoc::RIGHT)) {
             rhs = parse_expr_rhs(op_prec, std::move(rhs));
         }
 
