@@ -76,7 +76,22 @@ void IRStatementVis::visit(Expr &expr) {
 }
 
 void IRStatementVis::visit(VarDecl &decl) {
-    val = nullptr;
+    const auto &id = decl.get_id();
+
+    if (gen.named_values[id] != nullptr) {
+        val = nullptr;
+        return;
+    }
+
+    IRExprVis expr_vis{gen};
+    decl.get_rhs().accept(expr_vis);
+    val = expr_vis.get_val();
+    if (!val)
+        return;
+
+    val->setName(id);
+
+    gen.named_values[id] = val;
 }
 
 void IRStatementVis::visit(FnDecl &decl) {
