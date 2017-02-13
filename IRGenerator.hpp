@@ -9,6 +9,7 @@
 #include "llvm/IR/Module.h"
 #include <map>
 #include <string>
+#include <utility>
 
 namespace llvm {
 class Value;

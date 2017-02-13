@@ -1,4 +1,6 @@
 #include "ASTInfo.hpp"
+#include <memory>
+#include <vector>
 
 void ExprInfoVis::visit(LiteralExpr<double> &expr) {
     str = std::to_string(expr.get_val());

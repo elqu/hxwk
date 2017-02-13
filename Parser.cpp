@@ -2,7 +2,9 @@
 #include "AST.hpp"
 #include "C++11Compat.hpp"
 #include <map>
+#include <string>
 #include <tuple>
+#include <vector>
 
 static std::map<Tok, std::pair<int, Assoc>> binary_precedence{
         {Tok::EQ, {10, Assoc::RIGHT}},

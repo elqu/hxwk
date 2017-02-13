@@ -1,16 +1,21 @@
 #include "IRGenerator.hpp"
 #include "Lexer.hpp"
 #include "llvm/ADT/APFloat.h"
+#include "llvm/IR/Argument.h"
 #include "llvm/IR/BasicBlock.h"
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/DerivedTypes.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/GlobalValue.h"
-#include "llvm/IR/Type.h"
 #include "llvm/IR/Verifier.h"
 #include "llvm/Support/raw_os_ostream.h"
 #include <iostream>
 #include <utility>
+#include <vector>
+
+namespace llvm {
+class Type;
+}
 
 void IRExprVis::visit(LiteralExpr<double> &expr) {
     val = llvm::ConstantFP::get(gen.context, llvm::APFloat{expr.get_val()});
