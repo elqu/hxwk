@@ -17,15 +17,15 @@ namespace llvm {
 class Type;
 }
 
-void IRExprVis::visit(LiteralExpr<double> &expr) {
+void IRExprVis::visit(const LiteralExpr<double> &expr) {
     val = llvm::ConstantFP::get(gen.context, llvm::APFloat{expr.get_val()});
 }
 
-void IRExprVis::visit(IdExpr &expr) {
+void IRExprVis::visit(const IdExpr &expr) {
     val = gen.named_values[expr.get_id()];
 }
 
-void IRExprVis::visit(BinaryExpr &expr) {
+void IRExprVis::visit(const BinaryExpr &expr) {
     IRExprVis lhs{gen}, rhs{gen};
     expr.get_lhs().accept(lhs);
     expr.get_rhs().accept(rhs);
@@ -48,7 +48,7 @@ void IRExprVis::visit(BinaryExpr &expr) {
     }
 }
 
-void IRExprVis::visit(CallExpr &expr) {
+void IRExprVis::visit(const CallExpr &expr) {
     auto *callee = gen.module.getFunction(expr.get_id());
     if (!callee || callee->arg_size() != expr.get_args().size()) {
         val = nullptr;
@@ -69,13 +69,13 @@ void IRExprVis::visit(CallExpr &expr) {
     val = gen.builder.CreateCall(callee, std::move(args));
 }
 
-void IRStatementVis::visit(Expr &expr) {
+void IRStatementVis::visit(const Expr &expr) {
     IRExprVis expr_vis{gen};
     expr.accept(expr_vis);
     val = expr_vis.get_val();
 }
 
-void IRStatementVis::visit(VarDecl &decl) {
+void IRStatementVis::visit(const VarDecl &decl) {
     const auto &id = decl.get_id();
 
     if (gen.named_values[id] != nullptr) {
@@ -94,7 +94,7 @@ void IRStatementVis::visit(VarDecl &decl) {
     gen.named_values[id] = val;
 }
 
-void IRStatementVis::visit(FnDecl &decl) {
+void IRStatementVis::visit(const FnDecl &decl) {
     auto *double_type = llvm::FunctionType::getDoubleTy(gen.context);
     std::vector<llvm::Type *> types{decl.get_params().size(), double_type};
     auto *fn_type = llvm::FunctionType::get(double_type, types, false);
@@ -110,7 +110,7 @@ void IRStatementVis::visit(FnDecl &decl) {
     val = fn;
 }
 
-void IRStatementVis::visit(FnDef &def) {
+void IRStatementVis::visit(const FnDef &def) {
     auto *fn = gen.module.getFunction(def.get_decl().get_id());
 
     if (fn && !fn->empty()) {

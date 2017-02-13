@@ -2,15 +2,15 @@
 #include <memory>
 #include <vector>
 
-void ExprInfoVis::visit(LiteralExpr<double> &expr) {
+void ExprInfoVis::visit(const LiteralExpr<double> &expr) {
     str = std::to_string(expr.get_val());
 }
 
-void ExprInfoVis::visit(IdExpr &expr) {
+void ExprInfoVis::visit(const IdExpr &expr) {
     str = expr.get_id();
 }
 
-void ExprInfoVis::visit(BinaryExpr &expr) {
+void ExprInfoVis::visit(const BinaryExpr &expr) {
     ExprInfoVis lhs, rhs;
     expr.get_lhs().accept(lhs);
     expr.get_rhs().accept(rhs);
@@ -19,7 +19,7 @@ void ExprInfoVis::visit(BinaryExpr &expr) {
           + ")";
 }
 
-void ExprInfoVis::visit(CallExpr &expr) {
+void ExprInfoVis::visit(const CallExpr &expr) {
     str = expr.get_id() + "(";
     for (const auto &arg : expr.get_args()) {
         ExprInfoVis vis;
@@ -30,19 +30,19 @@ void ExprInfoVis::visit(CallExpr &expr) {
     str += ")";
 }
 
-void SynInfoVis::visit(Expr &expr) {
+void SynInfoVis::visit(const Expr &expr) {
     ExprInfoVis expr_vis;
     expr.accept(expr_vis);
     str = expr_vis.get_str();
 }
 
-void SynInfoVis::visit(VarDecl &expr) {
+void SynInfoVis::visit(const VarDecl &expr) {
     ExprInfoVis expr_vis;
     expr.get_rhs().accept(expr_vis);
     str = "let " + expr.get_id() + " = " + expr_vis.get_str();
 }
 
-void SynInfoVis::visit(FnDecl &decl) {
+void SynInfoVis::visit(const FnDecl &decl) {
     str = "fn " + decl.get_id() + "(";
 
     if (decl.get_params().size() == 0) {
@@ -56,7 +56,7 @@ void SynInfoVis::visit(FnDecl &decl) {
     str += ");";
 }
 
-void SynInfoVis::visit(FnDef &def) {
+void SynInfoVis::visit(const FnDef &def) {
     SynInfoVis vis;
     def.get_decl().accept(vis);
     str = vis.str;

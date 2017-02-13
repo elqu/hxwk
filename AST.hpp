@@ -65,7 +65,7 @@ class IdExpr : public Expr {
   public:
     IdExpr(std::string id) : id(std::move(id)){};
 
-    std::string get_id() const { return id; };
+    const std::string &get_id() const { return id; };
 
     ACCEPT(ExprVis);
 
@@ -79,8 +79,8 @@ class BinaryExpr : public Expr {
             : op(op), lhs(std::move(lhs)), rhs(std::move(rhs)){};
 
     Tok get_op() const { return op; };
-    Expr &get_lhs() const { return *lhs; };
-    Expr &get_rhs() const { return *rhs; };
+    const Expr &get_lhs() const { return *lhs; };
+    const Expr &get_rhs() const { return *rhs; };
 
     ACCEPT(ExprVis);
 
@@ -94,7 +94,7 @@ class CallExpr : public Expr {
     CallExpr(std::string id, std::vector<std::unique_ptr<Expr>> args)
             : id(std::move(id)), args(std::move(args)){};
 
-    std::string get_id() const { return id; };
+    const std::string &get_id() const { return id; };
     const std::vector<std::unique_ptr<Expr>> &get_args() const {
         return args;
     };
@@ -111,8 +111,8 @@ class VarDecl : public Statement {
     VarDecl(std::string id, std::unique_ptr<Expr> rhs)
             : id(std::move(id)), rhs(std::move(rhs)){};
 
-    std::string get_id() const { return id; };
-    Expr &get_rhs() const { return *rhs; };
+    const std::string &get_id() const { return id; };
+    const Expr &get_rhs() const { return *rhs; };
 
     ACCEPT(StatementVis);
 
@@ -126,7 +126,7 @@ class FnDecl : public Statement {
     FnDecl(std::string id, std::vector<std::string> params)
             : id(std::move(id)), params(std::move(params)){};
 
-    std::string get_id() const { return id; };
+    const std::string &get_id() const { return id; };
     const std::vector<std::string> &get_params() const { return params; };
 
     ACCEPT(StatementVis);
@@ -143,7 +143,7 @@ class FnDef : public Statement {
     FnDef(std::unique_ptr<FnDecl> decl, Body_t body)
             : decl(std::move(decl)), body(std::move(body)){};
 
-    FnDecl &get_decl() const { return *decl; };
+    const FnDecl &get_decl() const { return *decl; };
     const Body_t &get_body() const { return body; };
 
     ACCEPT(StatementVis);
