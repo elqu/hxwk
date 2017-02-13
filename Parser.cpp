@@ -147,9 +147,9 @@ std::unique_ptr<Expr> Parser::parse_expr_rhs(int expr_prec,
 std::unique_ptr<Expr> Parser::parse_primary() {
     Tok cur_tok = lex.get_tok();
     if (cur_tok == Tok::L_DOUBLE) {
-        auto expr = std::make_unique<LiteralExpr<double>>(lex.get_double());
+        auto val = lex.get_double();
         lex.get_next_tok();
-        return std::move(expr);
+        return std::make_unique<LiteralExpr<double>>(val);
     } else if (cur_tok != Tok::ID) {
         return nullptr;
     }
