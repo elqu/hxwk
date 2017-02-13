@@ -150,6 +150,13 @@ std::unique_ptr<Expr> Parser::parse_primary() {
         auto val = lex.get_double();
         lex.get_next_tok();
         return std::make_unique<LiteralExpr<double>>(val);
+    } else if (cur_tok == Tok::P_OPEN) {
+        lex.get_next_tok();
+        auto expr = parse_expr();
+        if (lex.get_tok() != Tok::P_CLOSE)
+            return nullptr;
+        lex.get_next_tok();
+        return expr;
     } else if (cur_tok != Tok::ID) {
         return nullptr;
     }
