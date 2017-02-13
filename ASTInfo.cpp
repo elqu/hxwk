@@ -39,7 +39,7 @@ void SynInfoVis::visit(Expr &expr) {
 void SynInfoVis::visit(VarDecl &expr) {
     ExprInfoVis expr_vis;
     expr.get_rhs().accept(expr_vis);
-    str = "double " + expr.get_id() + " = " + expr_vis.get_str();
+    str = "let " + expr.get_id() + " = " + expr_vis.get_str();
 }
 
 void SynInfoVis::visit(FnDecl &decl) {

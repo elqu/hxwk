@@ -53,11 +53,11 @@ Tok Lexer::get_next_tok() {
             id += cur_char;
         std::ungetc(cur_char, stdin);
 
+        if (id == "let")
+            return cur_tok = Tok::LET;
+
         if (id == "fn")
             return cur_tok = Tok::FN;
-
-        if (id == "double")
-            return cur_tok = Tok::T_DOUBLE;
 
         return cur_tok = Tok::ID;
     }

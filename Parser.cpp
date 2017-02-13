@@ -80,7 +80,7 @@ std::unique_ptr<Statement> Parser::parse_fn_body() {
         case Tok::SEMICOLON:
             lex.get_next_tok();
             return parse_fn_body();
-        case Tok::T_DOUBLE:
+        case Tok::LET:
             return parse_var_decl();
         case Tok::ID:
         case Tok::L_DOUBLE:
