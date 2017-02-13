@@ -18,21 +18,23 @@ class Type;
 }
 
 void IRExprVis::visit(const LiteralExpr<double> &expr) {
+    val = nullptr;
     val = llvm::ConstantFP::get(gen.context, llvm::APFloat{expr.get_val()});
 }
 
 void IRExprVis::visit(const IdExpr &expr) {
+    val = nullptr;
     val = gen.named_values[expr.get_id()];
 }
 
 void IRExprVis::visit(const BinaryExpr &expr) {
+    val = nullptr;
+
     IRExprVis lhs{gen}, rhs{gen};
     expr.get_lhs().accept(lhs);
     expr.get_rhs().accept(rhs);
-    if (!lhs.val || !rhs.val) {
-        val = nullptr;
+    if (!lhs.val || !rhs.val)
         return;
-    }
 
     // TODO: assignment operator
     switch (expr.get_op()) {
@@ -43,26 +45,23 @@ void IRExprVis::visit(const BinaryExpr &expr) {
             val = gen.builder.CreateFMul(lhs.val, rhs.val);
             break;
         default:
-            val = nullptr;
             break;
     }
 }
 
 void IRExprVis::visit(const CallExpr &expr) {
+    val = nullptr;
+
     auto *callee = gen.module.getFunction(expr.get_id());
-    if (!callee || callee->arg_size() != expr.get_args().size()) {
-        val = nullptr;
+    if (!callee || callee->arg_size() != expr.get_args().size())
         return;
-    }
 
     std::vector<llvm::Value *> args;
     for (const auto &arg_node : expr.get_args()) {
         IRExprVis arg_vis{gen};
         arg_node->accept(arg_vis);
-        if (!arg_vis.val) {
-            val = nullptr;
+        if (!arg_vis.val)
             return;
-        }
         args.push_back(arg_vis.val);
     }
 
@@ -70,12 +69,16 @@ void IRExprVis::visit(const CallExpr &expr) {
 }
 
 void IRStatementVis::visit(const Expr &expr) {
+    val = nullptr;
+
     IRExprVis expr_vis{gen};
     expr.accept(expr_vis);
     val = expr_vis.get_val();
 }
 
 void IRStatementVis::visit(const VarDecl &decl) {
+    val = nullptr;
+
     const auto &id = decl.get_id();
 
     if (gen.named_values[id] != nullptr) {
@@ -95,6 +98,8 @@ void IRStatementVis::visit(const VarDecl &decl) {
 }
 
 void IRStatementVis::visit(const FnDecl &decl) {
+    val = nullptr;
+
     auto *double_type = llvm::FunctionType::getDoubleTy(gen.context);
     std::vector<llvm::Type *> types{decl.get_params().size(), double_type};
     auto *fn_type = llvm::FunctionType::get(double_type, types, false);
@@ -111,12 +116,12 @@ void IRStatementVis::visit(const FnDecl &decl) {
 }
 
 void IRStatementVis::visit(const FnDef &def) {
+    val = nullptr;
+
     auto *fn = gen.module.getFunction(def.get_decl().get_id());
 
-    if (fn && !fn->empty()) {
-        val = nullptr;
+    if (fn && !fn->empty())
         return;
-    }
 
     if (!fn) {
         IRStatementVis decl_vis{gen};
@@ -138,18 +143,14 @@ void IRStatementVis::visit(const FnDef &def) {
 
     if (!body_vis.val) {
         fn->eraseFromParent();
-        val = nullptr;
         return;
     }
 
     gen.builder.CreateRet(body_vis.val);
 
     llvm::raw_os_ostream err{std::cerr};
-    if (llvm::verifyFunction(*fn, &err)) {
-        val = nullptr;
+    if (llvm::verifyFunction(*fn, &err))
         return;
-    }
 
     val = fn;
-    return;
 }
