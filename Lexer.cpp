@@ -11,6 +11,20 @@ Tok Lexer::get_next_tok() {
         ;
 
     switch (cur_char) {
+        case '/':
+            if ((cur_char = std::getchar()) == '/') {
+                // The carriage return preceding a newline on e.g. Windows
+                // machines should just be consumed by getchar and
+                // theoretically not bother the lexing, but this behaviour
+                // remains to be tested.
+                while ((cur_char = std::getchar()) != '\n' && cur_char != EOF)
+                    ;
+                return get_next_tok();
+            } else {
+                std::ungetc(cur_char, stdin);
+                cur_char = '/';
+            }
+            return cur_tok = Tok::INVALID;
         case EOF:
             return cur_tok = Tok::END;
         case ',':
