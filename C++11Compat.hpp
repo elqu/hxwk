@@ -6,7 +6,11 @@
 #include <type_traits>
 #include <utility>
 
-#if __cplusplus < 201402L
+#if !defined(__cpp_lib_make_unique) && defined(_MSC_VER) && _MSC_VER >= 1800
+#define __cpp_lib_make_unique 201304
+#endif
+
+#ifndef __cpp_lib_make_unique
 namespace std {
 
 template <class T, class... Args>
@@ -26,6 +30,7 @@ template <class T, class... Args>
 typename std::enable_if<std::extent<T>::value != 0, std::unique_ptr<T>>::type
 make_unique(Args &&... args)
         = delete;
+
 }
 #endif
 
