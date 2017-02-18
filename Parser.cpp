@@ -62,6 +62,9 @@ std::unique_ptr<Statement> Parser::parse_fn() {
         fn_body.push_back(std::move(statement));
     }
 
+    if (lex.get_tok() != Tok::BR_CLOSE)
+        return error_null("Expected closing brace `}`");
+
     lex.get_next_tok();
     auto decl = std::make_unique<FnDecl>(std::move(id), std::move(params));
     return std::make_unique<FnDef>(std::move(decl), std::move(fn_body));
