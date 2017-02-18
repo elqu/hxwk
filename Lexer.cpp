@@ -1,6 +1,9 @@
 #include "Lexer.hpp"
+#include "Log.hpp"
 #include <cctype>
 #include <cstdio>
+
+#define error_inv(...) Log::error_val<Tok, Tok::INVALID>(__VA_ARGS__)
 
 Tok Lexer::get_next_tok() {
     if (cur_tok == Tok::END)
@@ -24,7 +27,7 @@ Tok Lexer::get_next_tok() {
                 std::ungetc(cur_char, stdin);
                 cur_char = '/';
             }
-            return cur_tok = Tok::INVALID;
+            return error_inv("Invalid character `/`");
         case EOF:
             return cur_tok = Tok::END;
         case ',':
@@ -75,7 +78,7 @@ Tok Lexer::get_next_tok() {
                 number += cur_char;
 
             if (cur_char != '.')
-                return cur_tok = Tok::INVALID;
+                return error_inv("Expected double literal");
             number += '.';
         }
 
@@ -84,11 +87,12 @@ Tok Lexer::get_next_tok() {
         std::ungetc(cur_char, stdin);
 
         if (number == ".")
-            return cur_tok = Tok::INVALID;
+            return error_inv(
+                    "Expected numbers following or preceding decimal mark "
+                    "`.`");
 
         l_double = std::stod(number);
         return cur_tok = Tok::L_DOUBLE;
     }
-
-    return cur_tok = Tok::INVALID;
+    return error_inv("Invalid character `", static_cast<char>(cur_char), "`");
 }

@@ -1,10 +1,13 @@
 #include "Parser.hpp"
 #include "AST.hpp"
 #include "C++11Compat.hpp"
+#include "Log.hpp"
 #include <map>
 #include <string>
 #include <tuple>
 #include <vector>
+
+#define error_null(...) Log::error_val<std::nullptr_t>(__VA_ARGS__)
 
 static std::map<Tok, std::pair<int, Assoc>> binary_precedence{
         {Tok::EQ, {10, Assoc::RIGHT}},
@@ -19,18 +22,18 @@ std::unique_ptr<Statement> Parser::parse() {
         case Tok::FN:
             return parse_fn();
         default:
-            return nullptr;
+            return error_null("Expected function declaration");
     }
 }
 
 std::unique_ptr<Statement> Parser::parse_fn() {
     Tok cur_tok = lex.get_next_tok();
     if (cur_tok != Tok::ID)
-        return nullptr;
+        return error_null("Expected identifier");
     auto id = lex.get_id();
 
     if ((cur_tok = lex.get_next_tok()) != Tok::P_OPEN)
-        return nullptr;
+        return error_null("Expected opening parenthesis `(`");
 
     std::vector<std::string> params;
 
@@ -42,13 +45,13 @@ std::unique_ptr<Statement> Parser::parse_fn() {
     }
 
     if (cur_tok != Tok::P_CLOSE)
-        return nullptr;
+        return error_null("Expected closing parenthesis `)`");
 
     if ((cur_tok = lex.get_next_tok()) == Tok::SEMICOLON)
         return std::make_unique<FnDecl>(std::move(id), std::move(params));
 
     if (cur_tok != Tok::BR_OPEN)
-        return nullptr;
+        return error_null("Expected opening brace `{`");
 
     std::vector<std::unique_ptr<Statement>> fn_body;
     lex.get_next_tok();
@@ -65,9 +68,7 @@ std::unique_ptr<Statement> Parser::parse_fn() {
 }
 
 std::unique_ptr<Statement> Parser::parse_fn_body() {
-    Tok cur_tok = lex.get_tok();
-
-    switch (cur_tok) {
+    switch (Tok cur_tok = lex.get_tok()) {
         case Tok::SEMICOLON:
             lex.get_next_tok();
             return parse_fn_body();
@@ -77,20 +78,20 @@ std::unique_ptr<Statement> Parser::parse_fn_body() {
         case Tok::L_DOUBLE:
             return parse_top_expr();
         default:
-            return nullptr;
+            return error_null("Expected variable declaration or expression");
     }
 }
 
 std::unique_ptr<VarDecl> Parser::parse_var_decl() {
     Tok cur_tok = lex.get_next_tok();
     if (cur_tok != Tok::ID)
-        return nullptr;
+        return error_null("Expected identifier");
 
     auto id = lex.get_id();
 
     cur_tok = lex.get_next_tok();
     if (cur_tok != Tok::EQ)
-        return nullptr;
+        return error_null("Expected equality sign `=`");
 
     lex.get_next_tok();
     auto expr = parse_expr();
@@ -104,7 +105,7 @@ std::unique_ptr<Expr> Parser::parse_top_expr() {
     auto expr = parse_expr();
 
     if (lex.get_tok() != Tok::SEMICOLON)
-        return nullptr;
+        return error_null("Expected semicolon `;`");
 
     lex.get_next_tok();
     return expr;
@@ -154,11 +155,11 @@ std::unique_ptr<Expr> Parser::parse_primary() {
         lex.get_next_tok();
         auto expr = parse_expr();
         if (lex.get_tok() != Tok::P_CLOSE)
-            return nullptr;
+            return error_null("Expected closing parenthesis `)`");
         lex.get_next_tok();
         return expr;
     } else if (cur_tok != Tok::ID) {
-        return nullptr;
+        return error_null("Expected primary expression");
     }
 
     lex.get_next_tok();

@@ -1,5 +1,6 @@
 #include "IRGenerator.hpp"
 #include "Lexer.hpp"
+#include "Log.hpp"
 #include "llvm/ADT/APFloat.h"
 #include "llvm/IR/Argument.h"
 #include "llvm/IR/BasicBlock.h"
@@ -45,6 +46,7 @@ void IRExprVis::visit(const BinaryExpr &expr) {
             val = gen.builder.CreateFMul(lhs.val, rhs.val);
             break;
         default:
+            Log::error("Unknown binary operator");
             break;
     }
 }
@@ -53,8 +55,14 @@ void IRExprVis::visit(const CallExpr &expr) {
     val = nullptr;
 
     auto *callee = gen.module.getFunction(expr.get_id());
-    if (!callee || callee->arg_size() != expr.get_args().size())
-        return;
+    if (!callee)
+        return Log::error("Undeclared function ", expr.get_id());
+
+    auto expected_args = callee->arg_size();
+    auto given_args = expr.get_args().size();
+    if (expected_args != given_args)
+        return Log::error("Wrong number of arguments (expected ",
+                          expected_args, ", got ", given_args, ")");
 
     std::vector<llvm::Value *> args;
     for (const auto &arg_node : expr.get_args()) {
@@ -83,7 +91,7 @@ void IRStatementVis::visit(const VarDecl &decl) {
 
     if (gen.named_values[id] != nullptr) {
         val = nullptr;
-        return;
+        return Log::error("Cannot redeclare variable `", id, "`");
     }
 
     IRExprVis expr_vis{gen};
@@ -118,15 +126,18 @@ void IRStatementVis::visit(const FnDecl &decl) {
 void IRStatementVis::visit(const FnDef &def) {
     val = nullptr;
 
-    auto *fn = gen.module.getFunction(def.get_decl().get_id());
+    const auto &id = def.get_decl().get_id();
+    auto *fn = gen.module.getFunction(id);
 
     if (fn && !fn->empty())
-        return;
+        return Log::error("Cannot redefine function `", id, "`");
 
     if (!fn) {
         IRStatementVis decl_vis{gen};
         def.get_decl().accept(decl_vis);
         fn = static_cast<llvm::Function *>(decl_vis.val);
+        if (!fn)
+            return;
     }
 
     auto *bb = llvm::BasicBlock::Create(gen.context, "entry", fn);
