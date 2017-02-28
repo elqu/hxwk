@@ -77,6 +77,7 @@ std::unique_ptr<Statement> Parser::parse_fn_body() {
             return parse_fn_body();
         case Tok::LET:
             return parse_var_decl();
+        case Tok::P_OPEN:
         case Tok::ID:
         case Tok::L_DOUBLE:
             return parse_top_expr();
