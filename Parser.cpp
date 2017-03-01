@@ -21,6 +21,8 @@ std::unique_ptr<Statement> Parser::parse() {
             return parse();
         case Tok::FN:
             return parse_fn();
+        case Tok::END:
+            return nullptr;
         default:
             return error_null("Expected function declaration");
     }
