@@ -15,6 +15,17 @@ namespace llvm {
 class Value;
 }
 
+class IdScoper {
+  public:
+    using value_t = llvm::Value *;
+    void enter();
+    void exit();
+    value_t &operator[](const std::string &id);
+
+  private:
+    std::vector<std::map<std::string, value_t>> named_values;
+};
+
 class IRGenerator {
   public:
     friend class IRExprVis;
@@ -28,7 +39,7 @@ class IRGenerator {
     llvm::LLVMContext context;
     llvm::IRBuilder<> builder;
     llvm::Module module;
-    std::map<std::string, llvm::Value *> named_values;
+    IdScoper named_values;
 };
 
 class IRExprVis : public ExprVis {

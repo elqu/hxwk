@@ -18,6 +18,23 @@ namespace llvm {
 class Type;
 }
 
+void IdScoper::enter() {
+    named_values.emplace_back();
+}
+
+void IdScoper::exit() {
+    named_values.pop_back();
+}
+
+IdScoper::value_t &IdScoper::operator[](const std::string &id) {
+    for (auto i = named_values.rbegin(); i != named_values.rend(); ++i) {
+        value_t &val = i->operator[](id);
+        if (val != value_t{})
+            return val;
+    }
+    return named_values.back()[id];
+}
+
 void IRExprVis::visit(const LiteralExpr<double> &expr) {
     val = nullptr;
     val = llvm::ConstantFP::get(gen.context, llvm::APFloat{expr.get_val()});
@@ -89,11 +106,6 @@ void IRStatementVis::visit(const VarDecl &decl) {
 
     const auto &id = decl.get_id();
 
-    if (gen.named_values[id] != nullptr) {
-        val = nullptr;
-        return Log::error("Cannot redeclare variable `", id, "`");
-    }
-
     IRExprVis expr_vis{gen};
     decl.get_rhs().accept(expr_vis);
     val = expr_vis.get_val();
@@ -143,14 +155,14 @@ void IRStatementVis::visit(const FnDef &def) {
     auto *bb = llvm::BasicBlock::Create(gen.context, "entry", fn);
     gen.builder.SetInsertPoint(bb);
 
-    gen.named_values.clear();
-    for (auto &arg : fn->args()) {
+    gen.named_values.enter();
+    for (auto &arg : fn->args())
         gen.named_values[arg.getName()] = &arg;
-    }
 
     IRStatementVis body_vis{gen};
     for (const auto &statement : def.get_body())
         statement->accept(body_vis);
+    gen.named_values.exit();
 
     if (!body_vis.val) {
         fn->eraseFromParent();
