@@ -35,7 +35,7 @@ IdScoper::value_t IdScoper::operator[](const std::string &id) {
     return nullptr;
 }
 
-IdScoper::value_t &IdScoper::from_current_scope(const std::string &id) {
+IdScoper::value_t &IdScoper::current_scope(const std::string &id) {
     return named_values.back()[id];
 }
 
@@ -136,7 +136,7 @@ void IRStatementVis::visit(const VarDecl &decl) {
 
     val->setName(id);
 
-    gen.named_values.from_current_scope(id) = val;
+    gen.named_values.current_scope(id) = val;
 }
 
 void IRStatementVis::visit(const FnDecl &decl) {
@@ -179,7 +179,7 @@ void IRStatementVis::visit(const FnDef &def) {
 
     gen.named_values.enter();
     for (auto &arg : fn->args())
-        gen.named_values.from_current_scope(arg.getName()) = &arg;
+        gen.named_values.current_scope(arg.getName()) = &arg;
 
     IRStatementVis body_vis{gen};
     const auto &body = def.get_body();

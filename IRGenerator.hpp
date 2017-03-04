@@ -21,7 +21,7 @@ class IdScoper {
     void enter();
     void exit();
     value_t operator[](const std::string &id);
-    value_t &from_current_scope(const std::string &id);
+    value_t &current_scope(const std::string &id);
 
   private:
     std::vector<std::map<std::string, value_t>> named_values;
