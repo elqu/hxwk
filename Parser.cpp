@@ -102,6 +102,10 @@ std::unique_ptr<VarDecl> Parser::parse_var_decl() {
     if (!expr)
         return nullptr;
 
+    if (lex.get_tok() != Tok::SEMICOLON)
+        return error_null("Expected semicolon `;`");
+
+    lex.get_next_tok();
     return std::make_unique<VarDecl>(id, std::move(expr));
 }
 
