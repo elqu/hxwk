@@ -182,14 +182,15 @@ void IRStatementVis::visit(const FnDef &def) {
         gen.named_values.from_current_scope(arg.getName()) = &arg;
 
     IRStatementVis body_vis{gen};
-    for (const auto &statement : def.get_body())
-        statement->accept(body_vis);
-    gen.named_values.exit();
-
-    if (!body_vis.val) {
-        fn->eraseFromParent();
-        return;
+    const auto &body = def.get_body();
+    for (auto i = body.cbegin(); i != body.cend(); ++i) {
+        (*i)->accept(body_vis);
+        if (!body_vis.val) {
+            fn->eraseFromParent();
+            return;
+        }
     }
+    gen.named_values.exit();
 
     gen.builder.CreateRet(body_vis.val);
 
