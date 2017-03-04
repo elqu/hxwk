@@ -14,6 +14,7 @@ class LiteralExpr;
 class IdExpr;
 class BinaryExpr;
 class CallExpr;
+class ScopeExpr;
 class VarDecl;
 class FnDecl;
 class FnDef;
@@ -34,6 +35,7 @@ class ExprVis {
     ABSTR_VISIT(IdExpr);
     ABSTR_VISIT(BinaryExpr);
     ABSTR_VISIT(CallExpr);
+    ABSTR_VISIT(ScopeExpr);
 };
 
 class Statement {
@@ -104,6 +106,20 @@ class CallExpr : public Expr {
   private:
     std::string id;
     std::vector<std::unique_ptr<Expr>> args;
+};
+
+class ScopeExpr : public Expr {
+  public:
+    using Body_t = std::vector<std::unique_ptr<Statement>>;
+
+    ScopeExpr(Body_t body) : body(std::move(body)){};
+
+    const Body_t &get_body() const { return body; };
+
+    ACCEPT(ExprVis);
+
+  private:
+    Body_t body;
 };
 
 class VarDecl : public Statement {

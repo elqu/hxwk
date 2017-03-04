@@ -26,12 +26,16 @@ void IdScoper::exit() {
     named_values.pop_back();
 }
 
-IdScoper::value_t &IdScoper::operator[](const std::string &id) {
+IdScoper::value_t IdScoper::operator[](const std::string &id) {
     for (auto i = named_values.rbegin(); i != named_values.rend(); ++i) {
         value_t &val = i->operator[](id);
         if (val != value_t{})
             return val;
     }
+    return nullptr;
+}
+
+IdScoper::value_t &IdScoper::from_current_scope(const std::string &id) {
     return named_values.back()[id];
 }
 
@@ -93,6 +97,24 @@ void IRExprVis::visit(const CallExpr &expr) {
     val = gen.builder.CreateCall(callee, std::move(args));
 }
 
+void IRExprVis::visit(const ScopeExpr& expr) {
+    val = nullptr;
+
+    gen.named_values.enter();
+
+    IRStatementVis body_vis{gen};
+    const auto &body = expr.get_body();
+    for (auto i = body.cbegin(); i != body.cend(); ++i) {
+        (*i)->accept(body_vis);
+        if (!body_vis.get_val())
+            return;
+    }
+
+    gen.named_values.exit();
+
+    val = body_vis.get_val();
+}
+
 void IRStatementVis::visit(const Expr &expr) {
     val = nullptr;
 
@@ -114,7 +136,7 @@ void IRStatementVis::visit(const VarDecl &decl) {
 
     val->setName(id);
 
-    gen.named_values[id] = val;
+    gen.named_values.from_current_scope(id) = val;
 }
 
 void IRStatementVis::visit(const FnDecl &decl) {
@@ -157,7 +179,7 @@ void IRStatementVis::visit(const FnDef &def) {
 
     gen.named_values.enter();
     for (auto &arg : fn->args())
-        gen.named_values[arg.getName()] = &arg;
+        gen.named_values.from_current_scope(arg.getName()) = &arg;
 
     IRStatementVis body_vis{gen};
     for (const auto &statement : def.get_body())

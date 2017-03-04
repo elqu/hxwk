@@ -8,6 +8,7 @@
 class Expr;
 class Statement;
 class VarDecl;
+class ScopeExpr;
 
 enum class Assoc { LEFT, RIGHT };
 
@@ -24,6 +25,7 @@ class Parser {
     std::unique_ptr<Expr> parse_expr_rhs(int precedence,
                                          std::unique_ptr<Expr> lhs);
     std::unique_ptr<Expr> parse_primary();
+    std::unique_ptr<ScopeExpr> parse_scope();
 
   private:
     Lexer lex;

@@ -79,6 +79,7 @@ std::unique_ptr<Statement> Parser::parse_fn_body() {
             return parse_fn_body();
         case Tok::LET:
             return parse_var_decl();
+        case Tok::BR_OPEN:
         case Tok::P_OPEN:
         case Tok::ID:
         case Tok::L_DOUBLE:
@@ -164,6 +165,8 @@ std::unique_ptr<Expr> Parser::parse_primary() {
             return error_null("Expected closing parenthesis `)`");
         lex.get_next_tok();
         return expr;
+    } else if (cur_tok == Tok::BR_OPEN) {
+        return parse_scope();
     } else if (cur_tok != Tok::ID) {
         return error_null("Expected primary expression");
     }
@@ -186,4 +189,19 @@ std::unique_ptr<Expr> Parser::parse_primary() {
 
     lex.get_next_tok();
     return std::make_unique<CallExpr>(std::move(id), std::move(args));
+}
+
+std::unique_ptr<ScopeExpr> Parser::parse_scope() {
+    lex.get_next_tok();
+
+    std::vector<std::unique_ptr<Statement>> body;
+    while (lex.get_tok() != Tok::BR_CLOSE) {
+        auto statement = parse_fn_body();
+        if (!statement)
+            return nullptr;
+        body.push_back(std::move(statement));
+    }
+
+    lex.get_next_tok();
+    return std::make_unique<ScopeExpr>(std::move(body));
 }

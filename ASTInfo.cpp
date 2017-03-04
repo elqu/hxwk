@@ -30,6 +30,10 @@ void ExprInfoVis::visit(const CallExpr &expr) {
     str += ")";
 }
 
+void ExprInfoVis::visit(const ScopeExpr &expr) {
+    // TODO
+}
+
 void SynInfoVis::visit(const Expr &expr) {
     ExprInfoVis expr_vis;
     expr.accept(expr_vis);

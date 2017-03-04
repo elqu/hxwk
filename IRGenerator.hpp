@@ -20,7 +20,8 @@ class IdScoper {
     using value_t = llvm::Value *;
     void enter();
     void exit();
-    value_t &operator[](const std::string &id);
+    value_t operator[](const std::string &id);
+    value_t &from_current_scope(const std::string &id);
 
   private:
     std::vector<std::map<std::string, value_t>> named_values;
@@ -50,6 +51,7 @@ class IRExprVis : public ExprVis {
     VISIT(IdExpr);
     VISIT(BinaryExpr);
     VISIT(CallExpr);
+    VISIT(ScopeExpr);
 
     llvm::Value *get_val() const { return val; };
 
