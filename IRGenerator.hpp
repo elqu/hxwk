@@ -37,6 +37,9 @@ class IRGenerator {
     void print() const { module.dump(); };
 
   private:
+    template <typename SetupT>
+    llvm::Value *gen_scope(const ScopeExpr &scope, SetupT setup);
+
     llvm::LLVMContext context;
     llvm::IRBuilder<> builder;
     llvm::Module module;

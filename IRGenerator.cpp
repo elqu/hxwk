@@ -39,6 +39,24 @@ IdScoper::value_t &IdScoper::current_scope(const std::string &id) {
     return named_values.back()[id];
 }
 
+template <typename SetupT>
+llvm::Value *IRGenerator::gen_scope(const ScopeExpr &scope, SetupT setup) {
+    named_values.enter();
+
+    setup();
+
+    IRStatementVis body_vis{*this};
+    for (const auto &statement : scope.get_body()) {
+        statement->accept(body_vis);
+        if (!body_vis.get_val())
+            break;
+    }
+
+    named_values.exit();
+
+    return body_vis.get_val();
+}
+
 void IRExprVis::visit(const LiteralExpr<double> &expr) {
     val = nullptr;
     val = llvm::ConstantFP::get(gen.context, llvm::APFloat{expr.get_val()});
@@ -99,20 +117,7 @@ void IRExprVis::visit(const CallExpr &expr) {
 
 void IRExprVis::visit(const ScopeExpr& expr) {
     val = nullptr;
-
-    gen.named_values.enter();
-
-    IRStatementVis body_vis{gen};
-    const auto &body = expr.get_body();
-    for (auto i = body.cbegin(); i != body.cend(); ++i) {
-        (*i)->accept(body_vis);
-        if (!body_vis.get_val())
-            return;
-    }
-
-    gen.named_values.exit();
-
-    val = body_vis.get_val();
+    val = gen.gen_scope(expr, [] {});
 }
 
 void IRStatementVis::visit(const Expr &expr) {
