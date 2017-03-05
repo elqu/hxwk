@@ -154,19 +154,18 @@ class FnDecl : public Statement {
 
 class FnDef : public Statement {
   public:
-    using Body_t = std::vector<std::unique_ptr<Statement>>;
-
-    FnDef(std::unique_ptr<FnDecl> decl, Body_t body)
+    FnDef(std::unique_ptr<FnDecl> decl, std::unique_ptr<ScopeExpr> body)
             : decl(std::move(decl)), body(std::move(body)){};
 
     const FnDecl &get_decl() const { return *decl; };
-    const Body_t &get_body() const { return body; };
+    const ScopeExpr &get_body_scope() const { return *body; };
+    const ScopeExpr::Body_t &get_body() const { return body->get_body(); };
 
     ACCEPT(StatementVis);
 
   private:
     std::unique_ptr<FnDecl> decl;
-    Body_t body;
+    std::unique_ptr<ScopeExpr> body;
 };
 
 #endif

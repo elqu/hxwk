@@ -182,22 +182,17 @@ void IRStatementVis::visit(const FnDef &def) {
     auto *bb = llvm::BasicBlock::Create(gen.context, "entry", fn);
     gen.builder.SetInsertPoint(bb);
 
-    gen.named_values.enter();
-    for (auto &arg : fn->args())
-        gen.named_values.current_scope(arg.getName()) = &arg;
+    auto *body_val = gen.gen_scope(def.get_body_scope(), [fn, this] {
+        for (auto &arg : fn->args())
+            gen.named_values.current_scope(arg.getName()) = &arg;
+    });
 
-    IRStatementVis body_vis{gen};
-    const auto &body = def.get_body();
-    for (auto i = body.cbegin(); i != body.cend(); ++i) {
-        (*i)->accept(body_vis);
-        if (!body_vis.val) {
-            fn->eraseFromParent();
-            return;
-        }
+    if (!body_val) {
+        fn->eraseFromParent();
+        return;
     }
-    gen.named_values.exit();
 
-    gen.builder.CreateRet(body_vis.val);
+    gen.builder.CreateRet(body_val);
 
     llvm::raw_os_ostream err{std::cerr};
     if (llvm::verifyFunction(*fn, &err))

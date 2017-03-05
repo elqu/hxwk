@@ -66,7 +66,8 @@ std::unique_ptr<Statement> Parser::parse_fn() {
 
     lex.get_next_tok();
     auto decl = std::make_unique<FnDecl>(std::move(id), std::move(params));
-    return std::make_unique<FnDef>(std::move(decl), std::move(fn_body));
+    auto fn_body_scope = std::make_unique<ScopeExpr>(std::move(fn_body));
+    return std::make_unique<FnDef>(std::move(decl), std::move(fn_body_scope));
 }
 
 std::unique_ptr<Statement> Parser::parse_fn_body() {
