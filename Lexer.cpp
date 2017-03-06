@@ -40,6 +40,8 @@ Tok Lexer::get_next_tok() {
             return cur_tok = Tok::PLUS;
         case '*':
             return cur_tok = Tok::MULT;
+        case '<':
+            return cur_tok = Tok::CMP_LT;
         case '(':
             return cur_tok = Tok::P_OPEN;
         case ')':

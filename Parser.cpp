@@ -11,6 +11,7 @@
 
 static std::map<Tok, std::pair<int, Assoc>> binary_precedence{
         {Tok::EQ, {10, Assoc::RIGHT}},
+        {Tok::CMP_LT, {17, Assoc::LEFT}},
         {Tok::PLUS, {20, Assoc::LEFT}},
         {Tok::MULT, {30, Assoc::LEFT}}};
 

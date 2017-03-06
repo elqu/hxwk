@@ -84,6 +84,9 @@ void IRExprVis::visit(const BinaryExpr &expr) {
         case Tok::MULT:
             val = gen.builder.CreateFMul(lhs.val, rhs.val);
             break;
+        case Tok::CMP_LT:
+            val = gen.builder.CreateFCmpULT(lhs.val, rhs.val);
+            break;
         default:
             Log::error("Unknown binary operator");
             break;

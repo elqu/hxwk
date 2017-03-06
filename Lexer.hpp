@@ -12,6 +12,7 @@ enum class Tok {
     EQ,
     PLUS,
     MULT,
+    CMP_LT,
     L_DOUBLE,
     ID,
     FN,
