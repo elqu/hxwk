@@ -61,6 +61,12 @@ Tok Lexer::get_next_tok() {
         if (id == "let")
             return cur_tok = Tok::LET;
 
+        if (id == "if")
+            return cur_tok = Tok::IF;
+
+        if (id == "else")
+            return cur_tok = Tok::ELSE;
+
         if (id == "fn")
             return cur_tok = Tok::FN;
 

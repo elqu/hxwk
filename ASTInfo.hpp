@@ -12,6 +12,7 @@ class ExprInfoVis : public ExprVis {
     VISIT(BinaryExpr);
     VISIT(CallExpr);
     VISIT(ScopeExpr);
+    VISIT(IfExpr);
 
     std::string get_str() const { return str; };
 

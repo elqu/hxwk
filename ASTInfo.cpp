@@ -32,6 +32,12 @@ void ExprInfoVis::visit(const CallExpr &expr) {
 
 void ExprInfoVis::visit(const ScopeExpr &expr) {
     // TODO
+    str = "";
+}
+
+void ExprInfoVis::visit(const IfExpr &expr) {
+    // TODO
+    str = "";
 }
 
 void SynInfoVis::visit(const Expr &expr) {

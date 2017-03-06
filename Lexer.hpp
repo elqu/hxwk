@@ -9,6 +9,8 @@ enum class Tok {
     COMMA,
     SEMICOLON,
     LET,
+    IF,
+    ELSE,
     EQ,
     PLUS,
     MULT,

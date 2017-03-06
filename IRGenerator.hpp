@@ -55,6 +55,7 @@ class IRExprVis : public ExprVis {
     VISIT(BinaryExpr);
     VISIT(CallExpr);
     VISIT(ScopeExpr);
+    VISIT(IfExpr);
 
     llvm::Value *get_val() const { return val; };
 

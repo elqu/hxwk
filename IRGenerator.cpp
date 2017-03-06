@@ -123,6 +123,41 @@ void IRExprVis::visit(const ScopeExpr &expr) {
     val = gen.gen_scope(expr, [] {});
 }
 
+void IRExprVis::visit(const IfExpr &expr) {
+    val = nullptr;
+
+    IRExprVis cond_vis{gen};
+    expr.get_cond().accept(cond_vis);
+    if (!cond_vis.val)
+        return;
+
+    auto *fn = gen.builder.GetInsertBlock()->getParent();
+    auto *then = llvm::BasicBlock::Create(gen.context, "", fn);
+    auto *or_else = llvm::BasicBlock::Create(gen.context, "");
+    auto *merge = llvm::BasicBlock::Create(gen.context, "");
+
+    gen.builder.CreateCondBr(cond_vis.val, then, or_else);
+
+    gen.builder.SetInsertPoint(then);
+    auto *then_val = gen.gen_scope(expr.get_then(), [] {});
+    gen.builder.CreateBr(merge);
+    then = gen.builder.GetInsertBlock();
+
+    fn->getBasicBlockList().push_back(or_else);
+    gen.builder.SetInsertPoint(or_else);
+    auto *else_val = gen.gen_scope(expr.get_else(), [] {});
+    gen.builder.CreateBr(merge);
+    or_else = gen.builder.GetInsertBlock();
+
+    fn->getBasicBlockList().push_back(merge);
+    gen.builder.SetInsertPoint(merge);
+    auto *phi = gen.builder.CreatePHI(llvm::Type::getDoubleTy(gen.context), 2);
+    phi->addIncoming(then_val, then);
+    phi->addIncoming(else_val, or_else);
+
+    val = phi;
+}
+
 void IRStatementVis::visit(const Expr &expr) {
     val = nullptr;
 

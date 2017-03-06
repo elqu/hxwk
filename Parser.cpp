@@ -78,6 +78,7 @@ std::unique_ptr<Statement> Parser::parse_fn_body() {
             return parse_fn_body();
         case Tok::LET:
             return parse_var_decl();
+        case Tok::IF:
         case Tok::BR_OPEN:
         case Tok::P_OPEN:
         case Tok::ID:
@@ -170,6 +171,22 @@ std::unique_ptr<Expr> Parser::parse_primary() {
         return expr;
     } else if (cur_tok == Tok::BR_OPEN) {
         return parse_scope();
+    } else if (cur_tok == Tok::IF) {
+        lex.get_next_tok();
+        auto cond = parse_expr();
+
+        if (lex.get_tok() != Tok::BR_OPEN)
+            return error_null("Expected opening brace `{`");
+        auto then = parse_scope();
+
+        if (lex.get_tok() != Tok::ELSE)
+            return error_null("Expected keyword `else`");
+        if (lex.get_next_tok() != Tok::BR_OPEN)
+            return error_null("Expected opening brace `{`");
+        auto or_else = parse_scope();
+
+        return std::make_unique<IfExpr>(std::move(cond), std::move(then),
+                                        std::move(or_else));
     } else if (cur_tok != Tok::ID) {
         return error_null("Expected primary expression");
     }
