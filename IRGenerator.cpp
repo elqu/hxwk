@@ -118,7 +118,7 @@ void IRExprVis::visit(const CallExpr &expr) {
     val = gen.builder.CreateCall(callee, std::move(args));
 }
 
-void IRExprVis::visit(const ScopeExpr& expr) {
+void IRExprVis::visit(const ScopeExpr &expr) {
     val = nullptr;
     val = gen.gen_scope(expr, [] {});
 }
