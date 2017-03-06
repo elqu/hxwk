@@ -18,7 +18,7 @@ class Parser {
     std::pair<int, Assoc> get_precedence(Tok tok);
     std::unique_ptr<Statement> parse();
     std::unique_ptr<Statement> parse_fn();
-    std::unique_ptr<Statement> parse_fn_body();
+    std::unique_ptr<Statement> parse_scope_body();
     std::unique_ptr<VarDecl> parse_var_decl();
     std::unique_ptr<Expr> parse_top_expr();
     std::unique_ptr<Expr> parse_expr();

@@ -56,26 +56,19 @@ std::unique_ptr<Statement> Parser::parse_fn() {
     if (cur_tok != Tok::BR_OPEN)
         return error_null("Expected opening brace `{`");
 
-    std::vector<std::unique_ptr<Statement>> fn_body;
-    lex.get_next_tok();
-    while (lex.get_tok() != Tok::BR_CLOSE) {
-        auto statement = parse_fn_body();
-        if (!statement)
-            return nullptr;
-        fn_body.push_back(std::move(statement));
-    }
+    auto fn_body_scope = parse_scope();
+    if (!fn_body_scope)
+        return nullptr;
 
-    lex.get_next_tok();
     auto decl = std::make_unique<FnDecl>(std::move(id), std::move(params));
-    auto fn_body_scope = std::make_unique<ScopeExpr>(std::move(fn_body));
     return std::make_unique<FnDef>(std::move(decl), std::move(fn_body_scope));
 }
 
-std::unique_ptr<Statement> Parser::parse_fn_body() {
+std::unique_ptr<Statement> Parser::parse_scope_body() {
     switch (Tok cur_tok = lex.get_tok()) {
         case Tok::SEMICOLON:
             lex.get_next_tok();
-            return parse_fn_body();
+            return parse_scope_body();
         case Tok::LET:
             return parse_var_decl();
         case Tok::IF:
@@ -216,7 +209,7 @@ std::unique_ptr<ScopeExpr> Parser::parse_scope() {
 
     std::vector<std::unique_ptr<Statement>> body;
     while (lex.get_tok() != Tok::BR_CLOSE) {
-        auto statement = parse_fn_body();
+        auto statement = parse_scope_body();
         if (!statement)
             return nullptr;
         body.push_back(std::move(statement));
