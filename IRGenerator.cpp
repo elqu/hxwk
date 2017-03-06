@@ -81,8 +81,14 @@ void IRExprVis::visit(const BinaryExpr &expr) {
         case Tok::PLUS:
             val = gen.builder.CreateFAdd(lhs.val, rhs.val);
             break;
+        case Tok::MINUS:
+            val = gen.builder.CreateFSub(lhs.val, rhs.val);
+            break;
         case Tok::MULT:
             val = gen.builder.CreateFMul(lhs.val, rhs.val);
+            break;
+        case Tok::SLASH:
+            val = gen.builder.CreateFDiv(lhs.val, rhs.val);
             break;
         case Tok::CMP_LT:
             val = gen.builder.CreateFCmpULT(lhs.val, rhs.val);

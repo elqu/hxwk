@@ -27,7 +27,7 @@ Tok Lexer::get_next_tok() {
                 std::ungetc(cur_char, stdin);
                 cur_char = '/';
             }
-            return error_inv("Invalid character `/`");
+            return cur_tok = Tok::SLASH;
         case EOF:
             return cur_tok = Tok::END;
         case ',':
@@ -38,6 +38,8 @@ Tok Lexer::get_next_tok() {
             return cur_tok = Tok::EQ;
         case '+':
             return cur_tok = Tok::PLUS;
+        case '-':
+            return cur_tok = Tok::MINUS;
         case '*':
             return cur_tok = Tok::MULT;
         case '<':

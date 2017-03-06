@@ -10,10 +10,9 @@
 #define error_null(...) Log::error_val<std::nullptr_t>(__VA_ARGS__)
 
 static std::map<Tok, std::pair<int, Assoc>> binary_precedence{
-        {Tok::EQ, {10, Assoc::RIGHT}},
-        {Tok::CMP_LT, {17, Assoc::LEFT}},
-        {Tok::PLUS, {20, Assoc::LEFT}},
-        {Tok::MULT, {30, Assoc::LEFT}}};
+        {Tok::EQ, {10, Assoc::RIGHT}},  {Tok::CMP_LT, {17, Assoc::LEFT}},
+        {Tok::PLUS, {20, Assoc::LEFT}}, {Tok::MINUS, {20, Assoc::LEFT}},
+        {Tok::MULT, {30, Assoc::LEFT}}, {Tok::SLASH, {30, Assoc::LEFT}}};
 
 std::unique_ptr<Statement> Parser::parse() {
     switch (lex.get_tok()) {
