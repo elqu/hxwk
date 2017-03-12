@@ -3,10 +3,19 @@
 #include <cctype>
 #include <iostream>
 
-#define error_inv(...) Log::error_val<Tok, Tok::INVALID>(__VA_ARGS__)
+#define error_inv(...) Log::error_val<Tok, Tok::INVALID>(cur_loc, __VA_ARGS__)
 
 int Lexer::get_char() {
-    return std::cin.get();
+    int cur_char = std::cin.get();
+
+    if (cur_char == '\n') {
+        ++cur_loc.line;
+        cur_loc.col = 0;
+    } else {
+        ++cur_loc.col;
+    }
+
+    return cur_char;
 }
 
 int Lexer::peek_char() {

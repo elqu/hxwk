@@ -7,7 +7,8 @@
 #include <tuple>
 #include <vector>
 
-#define error_null(...) Log::error_val<std::nullptr_t>(__VA_ARGS__)
+#define error_null(...)                                                       \
+    Log::error_val<std::nullptr_t>(lex.get_loc(), __VA_ARGS__)
 
 static std::map<Tok, std::pair<int, Assoc>> binary_precedence{
         {Tok::EQ, {10, Assoc::RIGHT}},  {Tok::CMP_LT, {17, Assoc::LEFT}},
