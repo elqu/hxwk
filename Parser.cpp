@@ -107,6 +107,9 @@ std::unique_ptr<VarDecl> Parser::parse_var_decl() {
 std::unique_ptr<Expr> Parser::parse_top_expr() {
     auto expr = parse_expr();
 
+    if (!expr)
+        return nullptr;
+
     if (lex.get_tok() != Tok::SEMICOLON)
         return error_null("Expected semicolon `;`");
 
@@ -157,6 +160,8 @@ std::unique_ptr<Expr> Parser::parse_primary() {
     } else if (cur_tok == Tok::P_OPEN) {
         lex.get_next_tok();
         auto expr = parse_expr();
+        if (!expr)
+            return nullptr;
         if (lex.get_tok() != Tok::P_CLOSE)
             return error_null("Expected closing parenthesis `)`");
         lex.get_next_tok();
@@ -166,16 +171,22 @@ std::unique_ptr<Expr> Parser::parse_primary() {
     } else if (cur_tok == Tok::IF) {
         lex.get_next_tok();
         auto cond = parse_expr();
+        if (!cond)
+            return nullptr;
 
         if (lex.get_tok() != Tok::BR_OPEN)
             return error_null("Expected opening brace `{`");
         auto then = parse_scope();
+        if (!then)
+            return nullptr;
 
         if (lex.get_tok() != Tok::ELSE)
             return error_null("Expected keyword `else`");
         if (lex.get_next_tok() != Tok::BR_OPEN)
             return error_null("Expected opening brace `{`");
         auto or_else = parse_scope();
+        if (!or_else)
+            return nullptr;
 
         return std::make_unique<IfExpr>(std::move(cond), std::move(then),
                                         std::move(or_else));
