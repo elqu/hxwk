@@ -1,34 +1,39 @@
 #include "Lexer.hpp"
 #include "Log.hpp"
 #include <cctype>
-#include <cstdio>
+#include <iostream>
 
 #define error_inv(...) Log::error_val<Tok, Tok::INVALID>(__VA_ARGS__)
+
+int Lexer::get_char() {
+    return std::cin.get();
+}
+
+int Lexer::peek_char() {
+    return std::cin.peek();
+}
 
 Tok Lexer::get_next_tok() {
     if (cur_tok == Tok::END)
         return cur_tok;
 
     int cur_char;
-    while (std::isspace(cur_char = std::getchar()))
+    while (std::isspace(cur_char = get_char()))
         ;
 
     switch (cur_char) {
         case '/':
-            if ((cur_char = std::getchar()) == '/') {
+            if (peek_char() == '/') {
                 // The carriage return preceding a newline on e.g. Windows
                 // machines should just be consumed by getchar and
                 // theoretically not bother the lexing, but this behaviour
                 // remains to be tested.
-                while ((cur_char = std::getchar()) != '\n' && cur_char != EOF)
+                while ((cur_char = get_char()) != '\n' && cur_char != eof)
                     ;
                 return get_next_tok();
-            } else {
-                std::ungetc(cur_char, stdin);
-                cur_char = '/';
             }
             return cur_tok = Tok::SLASH;
-        case EOF:
+        case eof:
             return cur_tok = Tok::END;
         case ',':
             return cur_tok = Tok::COMMA;
@@ -56,9 +61,8 @@ Tok Lexer::get_next_tok() {
 
     if (std::isalpha(cur_char)) {
         id = cur_char;
-        while (std::isalnum(cur_char = std::getchar()))
-            id += cur_char;
-        std::ungetc(cur_char, stdin);
+        while (std::isalnum(peek_char()))
+            id += get_char();
 
         if (id == "let")
             return cur_tok = Tok::LET;
@@ -84,7 +88,7 @@ Tok Lexer::get_next_tok() {
         number = cur_char;
 
         if (!is_point) {
-            while (std::isdigit(cur_char = std::getchar()))
+            while (std::isdigit(cur_char = get_char()))
                 number += cur_char;
 
             if (cur_char != '.')
@@ -92,9 +96,8 @@ Tok Lexer::get_next_tok() {
             number += '.';
         }
 
-        while (std::isdigit(cur_char = std::getchar()))
-            number += cur_char;
-        std::ungetc(cur_char, stdin);
+        while (std::isdigit(peek_char()))
+            number += get_char();
 
         if (number == ".")
             return error_inv(

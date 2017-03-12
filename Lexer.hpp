@@ -35,7 +35,11 @@ class Lexer {
     double get_double() const { return l_double; };
 
   private:
-    Tok cur_tok = Tok::INVALID;
+    static constexpr int eof = std::char_traits<char>::eof();
+    int get_char();
+    int peek_char();
+
+    Tok cur_tok{Tok::INVALID};
     std::string id;
     double l_double;
 };
