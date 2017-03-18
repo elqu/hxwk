@@ -10,14 +10,22 @@
 #include <memory>
 #include <string>
 
-static void show_usage() {
-    std::cerr << "Usage: " << argv[0] << " [option(s)] VALUES"
+static void show_usage(std::string name) {
+    std::cerr << "Usage: " << name << " [option(s)] VALUES"
               << "Options:\n"
               << "\t-h,--help\t\tShow this help message\n"
               << std::endl;
 }
 
 int main(int argc, char** argv) {
+    for (int i = 1; i < argc; ++i) {
+        std::string arg = argv[i];
+        if ((arg == "-h") || (arg == "--help")) {
+            show_usage(argv[0]);
+            return 1;
+        }
+    }
+
     Parser par{Lexer{}};
     IRGenerator gen{"Hexenwerk"};
     IRStatementVis vis_code{gen};
@@ -34,13 +42,6 @@ int main(int argc, char** argv) {
     }
 
     gen.print();    
-
-    for (int i = 1; i < argc; ++i) {
-        std::string arg = argv[i];
-        if ((arg == "-h") || ("arg == "--help")) {
-            show_usage();
-        }
-    }
 
     return 0;
 }
