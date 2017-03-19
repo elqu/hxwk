@@ -2,6 +2,7 @@
 #define HXWK_IRGENERATOR_H
 
 #include "AST.hpp"
+#include "Type.hpp"
 #include "VisitorPattern.hpp"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/IR/IRBuilder.h"
@@ -15,9 +16,19 @@ namespace llvm {
 class Value;
 }
 
+struct IRHandle {
+    llvm::Value *val;
+    std::shared_ptr<Type> type;
+
+    void reset() {
+        val = nullptr;
+        type.reset();
+    };
+};
+
 class IdScoper {
   public:
-    using value_t = llvm::Value *;
+    using value_t = IRHandle;
     void enter();
     void exit();
     value_t operator[](const std::string &id);
@@ -32,13 +43,16 @@ class IRGenerator {
     friend class IRExprVis;
     friend class IRStatementVis;
     IRGenerator(llvm::StringRef name)
-            : builder{context}, module{std::move(name), context} {}
+            : builder{context}, module{std::move(name), context} {
+        named_values.enter();
+    };
 
     void print() const { module.dump(); };
 
   private:
     template <typename SetupT>
-    llvm::Value *gen_scope(const ScopeExpr &scope, SetupT setup);
+    IRHandle gen_scope(const ScopeExpr &scope, SetupT setup);
+    llvm::Type *get_llvm_type(const Type &type);
 
     llvm::LLVMContext context;
     llvm::IRBuilder<> builder;
@@ -57,11 +71,13 @@ class IRExprVis : public ExprVis {
     VISIT(ScopeExpr);
     VISIT(IfExpr);
 
-    llvm::Value *get_val() const { return val; };
+    const IRHandle &get_handle() const { return handle; };
+    llvm::Value *get_val() const { return handle.val; };
+    const std::shared_ptr<Type> &get_type() const { return handle.type; };
 
   private:
     IRGenerator &gen;
-    llvm::Value *val;
+    IRHandle handle;
 };
 
 class IRStatementVis : public StatementVis {
@@ -73,11 +89,13 @@ class IRStatementVis : public StatementVis {
     VISIT(FnDecl);
     VISIT(FnDef);
 
-    llvm::Value *get_val() const { return val; };
+    const IRHandle &get_handle() const { return handle; };
+    llvm::Value *get_val() const { return handle.val; };
+    const std::shared_ptr<Type> &get_type() const { return handle.type; };
 
   private:
     IRGenerator &gen;
-    llvm::Value *val;
+    IRHandle handle;
 };
 
 #endif

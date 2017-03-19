@@ -53,6 +53,10 @@ Tok Lexer::get_next_tok() {
         case '+':
             return cur_tok = Tok::PLUS;
         case '-':
+            if (peek_char() == '>') {
+                get_char();
+                return cur_tok = Tok::RARROW;
+            }
             return cur_tok = Tok::MINUS;
         case '*':
             return cur_tok = Tok::MULT;

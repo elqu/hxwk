@@ -23,7 +23,8 @@ enum class Tok {
     P_OPEN,
     P_CLOSE,
     BR_OPEN,
-    BR_CLOSE
+    BR_CLOSE,
+    RARROW,
 };
 
 struct CodeLocation {

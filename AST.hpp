@@ -2,6 +2,7 @@
 #define HXWK_AST_H
 
 #include "Lexer.hpp"
+#include "Type.hpp"
 #include "VisitorPattern.hpp"
 #include <memory>
 #include <string>
@@ -160,17 +161,22 @@ class VarDecl : public Statement {
 
 class FnDecl : public Statement {
   public:
-    FnDecl(std::string id, std::vector<std::string> params)
-            : id(std::move(id)), params(std::move(params)){};
+    FnDecl(std::string id, std::vector<std::string> params,
+           std::shared_ptr<Type> ret_type)
+            : id(std::move(id)),
+              params(std::move(params)),
+              ret_type(std::move(ret_type)){};
 
     const std::string &get_id() const { return id; };
     const std::vector<std::string> &get_params() const { return params; };
+    const std::shared_ptr<Type> &get_ret_type() const { return ret_type; };
 
     ACCEPT(StatementVis);
 
   private:
     std::string id;
     std::vector<std::string> params;
+    std::shared_ptr<Type> ret_type;
 };
 
 class FnDef : public Statement {

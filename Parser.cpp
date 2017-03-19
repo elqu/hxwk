@@ -2,6 +2,7 @@
 #include "AST.hpp"
 #include "C++11Compat.hpp"
 #include "Log.hpp"
+#include "Type.hpp"
 #include <map>
 #include <string>
 #include <tuple>
@@ -50,8 +51,27 @@ std::unique_ptr<Statement> Parser::parse_fn() {
     if (cur_tok != Tok::P_CLOSE)
         return error_null("Expected closing parenthesis `)`");
 
+    if ((cur_tok = lex.get_next_tok()) != Tok::RARROW)
+        return error_null("Expected right arrow `->`");
+
+    if ((cur_tok = lex.get_next_tok()) != Tok::ID)
+        return error_null("Expected type identifier");
+
+    auto type_id = lex.get_id();
+    std::shared_ptr<Type> ret_type;
+    if (type_id == "double") {
+        ret_type = std::make_shared<DoubleType>();
+    } else if (type_id == "bool") {
+        ret_type = std::make_shared<BoolType>();
+    } else if (type_id == "void") {
+        ret_type = std::make_shared<VoidType>();
+    } else {
+        return error_null("Unknown type identifier ", type_id);
+    }
+
     if ((cur_tok = lex.get_next_tok()) == Tok::SEMICOLON)
-        return std::make_unique<FnDecl>(std::move(id), std::move(params));
+        return std::make_unique<FnDecl>(std::move(id), std::move(params),
+                                        std::move(ret_type));
 
     if (cur_tok != Tok::BR_OPEN)
         return error_null("Expected opening brace `{`");
@@ -60,7 +80,8 @@ std::unique_ptr<Statement> Parser::parse_fn() {
     if (!fn_body_scope)
         return nullptr;
 
-    auto decl = std::make_unique<FnDecl>(std::move(id), std::move(params));
+    auto decl = std::make_unique<FnDecl>(std::move(id), std::move(params),
+                                         std::move(ret_type));
     return std::make_unique<FnDef>(std::move(decl), std::move(fn_body_scope));
 }
 
