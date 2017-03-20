@@ -6,6 +6,7 @@
 #include "VisitorPattern.hpp"
 #include "llvm/ADT/StringRef.h"
 #include <cstdio>
+#include <fstream>
 #include <iostream>
 #include <memory>
 #include <string>
@@ -41,7 +42,12 @@ int main(int argc, char** argv) {
         }
     }
 
-    gen.print();    
+    //std::ofstream out_file{"out.bc", std::ios_base::binary};
+    std::ofstream out_file{"out.ll"};
+    if (out_file.fail())
+        return 1;
+    //gen.write_bitcode(out_file);
+    gen.write_assembly(out_file);
 
     return 0;
 }

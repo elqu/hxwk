@@ -48,6 +48,8 @@ class IRGenerator {
     };
 
     void print() const { module.dump(); };
+    void write_assembly(std::ostream &stream) const;
+    void write_bitcode(std::ostream &stream) const;
 
   private:
     template <typename SetupT>

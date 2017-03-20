@@ -3,6 +3,7 @@
 #include "Lexer.hpp"
 #include "Log.hpp"
 #include "llvm/ADT/APFloat.h"
+#include "llvm/Bitcode/BitcodeWriter.h"
 #include "llvm/IR/Argument.h"
 #include "llvm/IR/BasicBlock.h"
 #include "llvm/IR/Constants.h"
@@ -39,6 +40,16 @@ IdScoper::value_t IdScoper::operator[](const std::string &id) {
 
 IdScoper::value_t &IdScoper::current_scope(const std::string &id) {
     return named_values.back()[id];
+}
+
+void IRGenerator::write_assembly(std::ostream &stream) const {
+    llvm::raw_os_ostream llvm_stream{stream};
+    module.print(llvm_stream, nullptr);
+}
+
+void IRGenerator::write_bitcode(std::ostream &stream) const {
+    llvm::raw_os_ostream llvm_stream{stream};
+    llvm::WriteBitcodeToFile(&module, llvm_stream);
 }
 
 template <typename SetupT>
