@@ -56,6 +56,11 @@ IRHandle IRGenerator::gen_scope(const ScopeExpr &scope, SetupT setup) {
 
     named_values.exit();
 
+    if (scope.get_body().empty())
+        return {llvm::ConstantPointerNull::get(
+                        llvm::Type::getInt8PtrTy(context)),  // Stub value
+                std::make_shared<VoidType>()};
+
     return body_vis.get_handle();
 }
 
