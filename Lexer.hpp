@@ -18,6 +18,7 @@ enum class Tok {
     SLASH,
     CMP_LT,
     L_DOUBLE,
+    L_STR,
     ID,
     FN,
     P_OPEN,

@@ -70,6 +70,27 @@ Tok Lexer::get_next_tok() {
             return cur_tok = Tok::BR_OPEN;
         case '}':
             return cur_tok = Tok::BR_CLOSE;
+        case '"':
+            id.clear();
+            while ((cur_char = get_char()) != '"' && cur_char != eof) {
+                if (cur_char == '\n')
+                    continue;
+
+                if (cur_char != '\\') {
+                    id += cur_char;
+                    continue;
+                }
+
+                switch (get_char()) {
+                    case 'n':
+                        id += '\n';
+                        break;
+                    case '\\':
+                        id += '\\';
+                        break;
+                }
+            }
+            return cur_tok = Tok::L_STR;
     }
 
     if (std::isalpha(cur_char)) {

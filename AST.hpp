@@ -34,6 +34,7 @@ class ExprVis {
   public:
     virtual ~ExprVis() = default;
     ABSTR_VISIT(LiteralExpr<double>);
+    ABSTR_VISIT(LiteralExpr<std::string>);
     ABSTR_VISIT(IdExpr);
     ABSTR_VISIT(BinaryExpr);
     ABSTR_VISIT(CallExpr);

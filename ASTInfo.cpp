@@ -6,6 +6,11 @@ void ExprInfoVis::visit(const LiteralExpr<double> &expr) {
     str = std::to_string(expr.get_val());
 }
 
+void ExprInfoVis::visit(const LiteralExpr<std::string> &expr) {
+    str = "\"" + expr.get_val() + "\"";
+    // This will output escape sequences as their materialised characters
+}
+
 void ExprInfoVis::visit(const IdExpr &expr) {
     str = expr.get_id();
 }

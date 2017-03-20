@@ -94,6 +94,12 @@ void IRExprVis::visit(const LiteralExpr<double> &expr) {
             std::make_shared<DoubleType>()};
 }
 
+void IRExprVis::visit(const LiteralExpr<std::string> &expr) {
+    handle.reset();
+    handle = {gen.builder.CreateGlobalStringPtr(expr.get_val()),
+              std::make_shared<StrLitType>()};
+}
+
 void IRExprVis::visit(const IdExpr &expr) {
     handle.reset();
     handle = gen.named_values[expr.get_id()];

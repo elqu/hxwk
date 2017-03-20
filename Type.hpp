@@ -6,7 +6,7 @@
 
 class Type {
   public:
-    enum class TypeKind { Simple, Void, Bool, Double, Function };
+    enum class TypeKind { Simple, Void, Bool, Double, StrLit, Function };
 
     virtual ~Type() = default;
 
@@ -28,7 +28,7 @@ class SimpleType : public virtual Type {
 
     static bool classof(const Type *type) {
         return type->getKind() >= TypeKind::Simple
-               && type->getKind() <= TypeKind::Double;
+               && type->getKind() <= TypeKind::StrLit;
     };
 };
 
@@ -56,6 +56,15 @@ class DoubleType : public SimpleType {
 
     static bool classof(const Type *type) {
         return type->getKind() == TypeKind::Double;
+    };
+};
+
+class StrLitType : public SimpleType {
+  public:
+    StrLitType() : Type{TypeKind::StrLit} {};
+
+    static bool classof(const Type *type) {
+        return type->getKind() == TypeKind::StrLit;
     };
 };
 

@@ -179,6 +179,10 @@ std::unique_ptr<Expr> Parser::parse_primary() {
         auto val = lex.get_double();
         lex.get_next_tok();
         return std::make_unique<LiteralExpr<double>>(val);
+    } else if (cur_tok == Tok::L_STR) {
+        auto str_lit = lex.get_id();
+        lex.get_next_tok();
+        return std::make_unique<LiteralExpr<std::string>>(std::move(str_lit));
     } else if (cur_tok == Tok::P_OPEN) {
         lex.get_next_tok();
         auto expr = parse_expr();

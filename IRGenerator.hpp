@@ -67,6 +67,7 @@ class IRExprVis : public ExprVis {
     IRExprVis(IRGenerator &gen) : gen{gen} {};
 
     VISIT(LiteralExpr<double>);
+    VISIT(LiteralExpr<std::string>);
     VISIT(IdExpr);
     VISIT(BinaryExpr);
     VISIT(CallExpr);
