@@ -12,10 +12,9 @@
 #include <string>
 
 static void show_usage(std::string name) {
-    std::cerr << "Usage: " << name << " [option(s)] VALUES"
+    std::cerr << "Usage: " << name << " [option(s)] VALUES\n"
               << "Options:\n"
-              << "\t-h,--help\t\tShow this help message\n"
-              << std::endl;
+              << "\t-h, --help\t\tShow this help message\n";
 }
 
 int main(int argc, char** argv) {
