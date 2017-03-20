@@ -88,6 +88,9 @@ Tok Lexer::get_next_tok() {
                     case '\\':
                         id += '\\';
                         break;
+                    case '"':
+                        id += '"';
+                        break;
                 }
             }
             return cur_tok = Tok::L_STR;
