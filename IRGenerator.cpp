@@ -155,6 +155,7 @@ void IRExprVis::visit(const CallExpr &expr) {
     if (!callee_handle.val) {
         return Log::error("Undeclared function ", expr.get_id());
     }
+    auto *callee = static_cast<llvm::Function *>(callee_handle.val);
 
     const auto *type = llvm::dyn_cast<FunctionType>(callee_handle.type.get());
     if (!type)
@@ -162,7 +163,8 @@ void IRExprVis::visit(const CallExpr &expr) {
 
     auto expected_args = type->get_n_args();
     auto given_args = expr.get_args().size();
-    if (expected_args != given_args)
+    if (expected_args != given_args
+        && !(callee->isVarArg() && expected_args <= given_args))
         return Log::error("Wrong number of arguments (expected ",
                           expected_args, " but got ", given_args, ")");
 
@@ -175,7 +177,6 @@ void IRExprVis::visit(const CallExpr &expr) {
         args.push_back(arg_vis.get_val());
     }
 
-    auto *callee = static_cast<llvm::Function *>(callee_handle.val);
     handle = {gen.builder.CreateCall(callee, std::move(args)),
               type->get_ret_type()};
 }

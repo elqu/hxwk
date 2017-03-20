@@ -45,6 +45,14 @@ class IRGenerator {
     IRGenerator(llvm::StringRef name)
             : builder{context}, module{std::move(name), context} {
         named_values.enter();
+        named_values.current_scope("printf")
+                = {llvm::Function::Create(
+                           llvm::FunctionType::get(
+                                   llvm::Type::getInt32Ty(context),
+                                   llvm::Type::getInt8PtrTy(context), true),
+                           llvm::Function::ExternalLinkage, "printf", &module),
+                   std::make_shared<FunctionType>(
+                           1, std::make_shared<StrLitType>())};
     };
 
     void print() const { module.dump(); };
