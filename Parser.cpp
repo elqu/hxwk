@@ -100,6 +100,7 @@ std::unique_ptr<Statement> Parser::parse_scope_body() {
         case Tok::ID:
         case Tok::L_INT32:
         case Tok::L_DOUBLE:
+        case Tok::L_STR:
             return parse_top_expr();
         default:
             return error_null("Expected variable declaration or expression");
