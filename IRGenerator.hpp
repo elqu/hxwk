@@ -52,7 +52,9 @@ class IRGenerator {
                                    llvm::Type::getInt8PtrTy(context), true),
                            llvm::Function::ExternalLinkage, "printf", &module),
                    std::make_shared<FunctionType>(
-                           1, std::make_shared<StrLitType>())};
+                           std::vector<std::shared_ptr<Type>>{
+                                   std::make_shared<StrLitType>()},
+                           std::make_shared<Int32Type>())};
     };
 
     void print() const { module.dump(); };

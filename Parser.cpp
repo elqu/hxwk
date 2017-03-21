@@ -30,6 +30,27 @@ std::unique_ptr<Statement> Parser::parse() {
     }
 }
 
+// Differs from the other functions as it does not expect its first toke to be
+// valied.
+std::unique_ptr<Type> Parser::parse_type() {
+    if (lex.get_tok() != Tok::ID)
+        return error_null("Expected type identifier");
+
+    auto type_id = lex.get_id();
+
+    if (type_id == "double") {
+        return std::make_unique<DoubleType>();
+    } else if (type_id == "i32") {
+        return std::make_unique<Int32Type>();
+    } else if (type_id == "bool") {
+        return std::make_unique<BoolType>();
+    } else if (type_id == "void") {
+        return std::make_unique<VoidType>();
+    } else {
+        return error_null("Unknown type identifier ", type_id);
+    }
+}
+
 std::unique_ptr<Statement> Parser::parse_fn() {
     Tok cur_tok = lex.get_next_tok();
     if (cur_tok != Tok::ID)
@@ -39,11 +60,21 @@ std::unique_ptr<Statement> Parser::parse_fn() {
     if ((cur_tok = lex.get_next_tok()) != Tok::P_OPEN)
         return error_null("Expected opening parenthesis `(`");
 
-    std::vector<std::string> params;
+    std::vector<FnDecl::Param_t> params;
 
     if ((cur_tok = lex.get_next_tok()) == Tok::ID) {
         do {
-            params.push_back(lex.get_id());
+            auto id = lex.get_id();
+
+            if (lex.get_next_tok() != Tok::COLON)
+                return error_null("Expected colon `:`");
+            lex.get_next_tok();
+
+            auto type = parse_type();
+            if (!type)
+                return nullptr;
+
+            params.push_back({std::move(id), std::move(type)});
         } while ((cur_tok = lex.get_next_tok()) == Tok::COMMA
                  && (cur_tok = lex.get_next_tok()) == Tok::ID);
     }
@@ -54,22 +85,8 @@ std::unique_ptr<Statement> Parser::parse_fn() {
     if ((cur_tok = lex.get_next_tok()) != Tok::RARROW)
         return error_null("Expected right arrow `->`");
 
-    if ((cur_tok = lex.get_next_tok()) != Tok::ID)
-        return error_null("Expected type identifier");
-
-    auto type_id = lex.get_id();
-    std::shared_ptr<Type> ret_type;
-    if (type_id == "double") {
-        ret_type = std::make_shared<DoubleType>();
-    } else if (type_id == "i32") {
-        ret_type = std::make_shared<Int32Type>();
-    } else if (type_id == "bool") {
-        ret_type = std::make_shared<BoolType>();
-    } else if (type_id == "void") {
-        ret_type = std::make_shared<VoidType>();
-    } else {
-        return error_null("Unknown type identifier ", type_id);
-    }
+    lex.get_next_tok();
+    auto ret_type = parse_type();
 
     if ((cur_tok = lex.get_next_tok()) == Tok::SEMICOLON)
         return std::make_unique<FnDecl>(std::move(id), std::move(params),

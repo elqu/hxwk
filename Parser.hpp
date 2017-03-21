@@ -7,6 +7,7 @@
 
 class Expr;
 class Statement;
+class Type;
 class VarDecl;
 class ScopeExpr;
 
@@ -17,6 +18,7 @@ class Parser {
     Parser(Lexer lex) : lex(std::move(lex)){};
     std::pair<int, Assoc> get_precedence(Tok tok);
     std::unique_ptr<Statement> parse();
+    std::unique_ptr<Type> parse_type();
     std::unique_ptr<Statement> parse_fn();
     std::unique_ptr<Statement> parse_scope_body();
     std::unique_ptr<VarDecl> parse_var_decl();

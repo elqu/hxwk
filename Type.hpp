@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <type_traits>
+#include <vector>
 
 class Type {
   public:
@@ -79,12 +80,15 @@ class StrLitType : public SimpleType {
 
 class FunctionType : public Type {
   public:
-    FunctionType(std::size_t n_args, std::shared_ptr<Type> ret_type)
+    FunctionType(std::vector<std::shared_ptr<Type>> param_types,
+                 std::shared_ptr<Type> ret_type)
             : Type{TypeKind::Function},
-              n_args{n_args},
+              param_types{std::move(param_types)},
               ret_type{std::move(ret_type)} {};
 
-    std::size_t get_n_args() const { return n_args; };
+    const std::vector<std::shared_ptr<Type>> get_args() const {
+        return param_types;
+    };
     const std::shared_ptr<Type> &get_ret_type() const { return ret_type; };
 
     static bool classof(const Type *type) {
@@ -92,16 +96,14 @@ class FunctionType : public Type {
     };
 
     bool operator==(const Type &rhs) const override {
-        std::printf("kek, der shit\n");
-
         const FunctionType &rhs_fn = *static_cast<const FunctionType *>(&rhs);
 
         return Type::operator==(rhs) && ret_type == rhs_fn.ret_type
-               && n_args == rhs_fn.n_args;
+               && param_types.size() == rhs_fn.param_types.size();
     };
 
   private:
-    std::size_t n_args;
+    std::vector<std::shared_ptr<Type>> param_types;
     std::shared_ptr<Type> ret_type;
 };
 

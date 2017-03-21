@@ -46,6 +46,8 @@ Tok Lexer::get_next_tok() {
             return cur_tok = Tok::END;
         case ',':
             return cur_tok = Tok::COMMA;
+        case ':':
+            return cur_tok = Tok::COLON;
         case ';':
             return cur_tok = Tok::SEMICOLON;
         case '=':

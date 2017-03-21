@@ -163,21 +163,22 @@ class VarDecl : public Statement {
 
 class FnDecl : public Statement {
   public:
-    FnDecl(std::string id, std::vector<std::string> params,
+    using Param_t = std::pair<std::string, std::shared_ptr<Type>>;
+    FnDecl(std::string id, std::vector<Param_t> params,
            std::shared_ptr<Type> ret_type)
             : id(std::move(id)),
               params(std::move(params)),
               ret_type(std::move(ret_type)){};
 
     const std::string &get_id() const { return id; };
-    const std::vector<std::string> &get_params() const { return params; };
+    const std::vector<Param_t> &get_params() const { return params; };
     const std::shared_ptr<Type> &get_ret_type() const { return ret_type; };
 
     ACCEPT(StatementVis);
 
   private:
     std::string id;
-    std::vector<std::string> params;
+    std::vector<Param_t> params;
     std::shared_ptr<Type> ret_type;
 };
 

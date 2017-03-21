@@ -7,6 +7,7 @@ enum class Tok {
     INVALID,
     END,
     COMMA,
+    COLON,
     SEMICOLON,
     LET,
     IF,

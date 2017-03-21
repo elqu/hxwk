@@ -182,8 +182,8 @@ void IRExprVis::visit(const BinaryExpr &expr) {
 
     if (!(is_arit(*lhs.get_type()) && is_arit(*rhs.get_type())))
         return Log::error(
-                "Both parameters of a binary expression must be of "
-                "type `double`");
+                "Both parameters of a binary expression must be of arithmetic "
+                "type (`bool`, `i32` or `double`)");
 
     handle.type = lhs.get_type()->getKind() > rhs.get_type()->getKind()
                           ? lhs.get_type()
@@ -244,7 +244,7 @@ void IRExprVis::visit(const CallExpr &expr) {
     handle.reset();
 
     auto callee_handle = gen.named_values[expr.get_id()];
-    if (!callee_handle.val) {
+    if (!callee_handle.val || !llvm::isa<FunctionType>(*callee_handle.type)) {
         return Log::error("Undeclared function ", expr.get_id());
     }
     auto *callee = static_cast<llvm::Function *>(callee_handle.val);
@@ -253,19 +253,25 @@ void IRExprVis::visit(const CallExpr &expr) {
     if (!type)
         return Log::error("`", expr.get_id(), "` is not a function");
 
-    auto expected_args = type->get_n_args();
-    auto given_args = expr.get_args().size();
-    if (expected_args != given_args
-        && !(callee->isVarArg() && expected_args <= given_args))
+    auto expected_arg_n = type->get_args().size();
+    auto given_arg_n = expr.get_args().size();
+    if (expected_arg_n != given_arg_n
+        && !(callee->isVarArg() && expected_arg_n <= given_arg_n))
         return Log::error("Wrong number of arguments (expected ",
-                          expected_args, " but got ", given_args, ")");
+                          expected_arg_n, " but got ", given_arg_n, ")");
 
+    std::size_t i = 0;
     std::vector<llvm::Value *> args;
+    const auto &callee_params
+            = llvm::cast<FunctionType>(*callee_handle.type).get_args();
     for (const auto &arg_node : expr.get_args()) {
         IRExprVis arg_vis{gen};
         arg_node->accept(arg_vis);
         if (!arg_vis.get_val())
             return;
+        if (i < callee_params.size()
+            && *arg_vis.get_type() != *(callee_params[i++]))
+            return Log::error("Function parameter type mismatch");
         args.push_back(arg_vis.get_val());
     }
 
@@ -359,8 +365,16 @@ void IRStatementVis::visit(const FnDecl &decl) {
     if (!ret_type)
         return Log::error("Invalid type");
 
-    auto *double_type = llvm::FunctionType::getDoubleTy(gen.context);
-    std::vector<llvm::Type *> types{decl.get_params().size(), double_type};
+    std::vector<llvm::Type *> types;
+    std::vector<std::shared_ptr<Type>> internal_types;
+    for (const auto &param : decl.get_params()) {
+        internal_types.push_back(param.second);
+        auto type = gen.get_llvm_type(*param.second);
+        if (!type)
+            return Log::error("Invalid type");
+        types.push_back(std::move(type));
+    }
+
     auto *fn_type = llvm::FunctionType::get(ret_type, types, false);
 
     auto *fn = llvm::Function::Create(fn_type, llvm::Function::ExternalLinkage,
@@ -368,11 +382,11 @@ void IRStatementVis::visit(const FnDecl &decl) {
 
     std::size_t i = 0;
     for (auto &arg : fn->args()) {
-        arg.setName(decl.get_params()[i++]);
+        arg.setName(decl.get_params()[i++].first);
     }
 
     handle = {fn, std::make_shared<FunctionType>(
-                          fn->arg_size(), std::move(decl.get_ret_type()))};
+                          internal_types, std::move(decl.get_ret_type()))};
     gen.named_values.current_scope(decl.get_id()) = handle;
 }
 
@@ -398,10 +412,13 @@ void IRStatementVis::visit(const FnDef &def) {
     auto *bb = llvm::BasicBlock::Create(gen.context, "entry", fn);
     gen.builder.SetInsertPoint(bb);
 
-    auto body_val = gen.gen_scope(def.get_body_scope(), [fn, this] {
-        auto type = std::make_shared<DoubleType>();
-        for (auto &arg : fn->args())
-            gen.named_values.current_scope(arg.getName()) = {&arg, type};
+    const auto &types = def.get_decl().get_params();
+    auto body_val = gen.gen_scope(def.get_body_scope(), [fn, types, this] {
+        std::size_t i = 0;
+        for (auto &arg : fn->args()) {
+            gen.named_values.current_scope(arg.getName())
+                    = {&arg, types[i++].second};
+        }
     });
 
     if (!body_val.val) {
