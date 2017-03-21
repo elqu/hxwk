@@ -125,12 +125,14 @@ Tok Lexer::get_next_tok() {
         number = cur_char;
 
         if (!is_point) {
-            while (std::isdigit(cur_char = get_char()))
-                number += cur_char;
+            while (std::isdigit(peek_char()))
+                number += get_char();
 
-            if (cur_char != '.')
-                return error_inv("Expected double literal");
-            number += '.';
+            if (peek_char() != '.') {
+                l_int32 = std::stoi(number);
+                return cur_tok = Tok::L_INT32;
+            }
+            number += get_char();
         }
 
         while (std::isdigit(peek_char()))

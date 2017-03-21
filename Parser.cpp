@@ -61,6 +61,8 @@ std::unique_ptr<Statement> Parser::parse_fn() {
     std::shared_ptr<Type> ret_type;
     if (type_id == "double") {
         ret_type = std::make_shared<DoubleType>();
+    } else if (type_id == "i32") {
+        ret_type = std::make_shared<Int32Type>();
     } else if (type_id == "bool") {
         ret_type = std::make_shared<BoolType>();
     } else if (type_id == "void") {
@@ -96,6 +98,7 @@ std::unique_ptr<Statement> Parser::parse_scope_body() {
         case Tok::BR_OPEN:
         case Tok::P_OPEN:
         case Tok::ID:
+        case Tok::L_INT32:
         case Tok::L_DOUBLE:
             return parse_top_expr();
         default:
@@ -179,6 +182,10 @@ std::unique_ptr<Expr> Parser::parse_primary() {
         auto val = lex.get_double();
         lex.get_next_tok();
         return std::make_unique<LiteralExpr<double>>(val);
+    } else if (cur_tok == Tok::L_INT32) {
+        auto val = lex.get_int32();
+        lex.get_next_tok();
+        return std::make_unique<LiteralExpr<int32_t>>(val);
     } else if (cur_tok == Tok::L_STR) {
         auto str_lit = lex.get_id();
         lex.get_next_tok();

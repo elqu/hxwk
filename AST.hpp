@@ -33,6 +33,7 @@ class StatementVis {
 class ExprVis {
   public:
     virtual ~ExprVis() = default;
+    ABSTR_VISIT(LiteralExpr<int32_t>);
     ABSTR_VISIT(LiteralExpr<double>);
     ABSTR_VISIT(LiteralExpr<std::string>);
     ABSTR_VISIT(IdExpr);

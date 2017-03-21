@@ -6,7 +6,7 @@
 
 class Type {
   public:
-    enum class TypeKind { Simple, Void, Bool, Double, StrLit, Function };
+    enum class TypeKind { Simple, Void, Bool, Int32, Double, StrLit, Function };
 
     virtual ~Type() = default;
 
@@ -47,6 +47,15 @@ class BoolType : public SimpleType {
 
     static bool classof(const Type *type) {
         return type->getKind() == TypeKind::Bool;
+    };
+};
+
+class Int32Type : public SimpleType {
+  public:
+    Int32Type() : Type{TypeKind::Int32} {};
+
+    static bool classof(const Type *type) {
+        return type->getKind() == TypeKind::Int32;
     };
 };
 

@@ -63,6 +63,7 @@ class IRGenerator {
     template <typename SetupT>
     IRHandle gen_scope(const ScopeExpr &scope, SetupT setup);
     llvm::Type *get_llvm_type(const Type &type);
+    llvm::Value *arit_cast(llvm::Value *val, const Type &from, const Type &to);
 
     llvm::LLVMContext context;
     llvm::IRBuilder<> builder;
@@ -74,6 +75,7 @@ class IRExprVis : public ExprVis {
   public:
     IRExprVis(IRGenerator &gen) : gen{gen} {};
 
+    VISIT(LiteralExpr<int32_t>);
     VISIT(LiteralExpr<double>);
     VISIT(LiteralExpr<std::string>);
     VISIT(IdExpr);

@@ -7,6 +7,7 @@
 
 class ExprInfoVis : public ExprVis {
   public:
+    VISIT(LiteralExpr<int32_t>);
     VISIT(LiteralExpr<double>);
     VISIT(LiteralExpr<std::string>);
     VISIT(IdExpr);

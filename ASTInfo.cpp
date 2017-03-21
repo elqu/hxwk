@@ -2,6 +2,10 @@
 #include <memory>
 #include <vector>
 
+void ExprInfoVis::visit(const LiteralExpr<int32_t> &expr) {
+    str = std::to_string(expr.get_val());
+}
+
 void ExprInfoVis::visit(const LiteralExpr<double> &expr) {
     str = std::to_string(expr.get_val());
 }

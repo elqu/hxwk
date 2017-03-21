@@ -78,6 +78,8 @@ IRHandle IRGenerator::gen_scope(const ScopeExpr &scope, SetupT setup) {
 llvm::Type *IRGenerator::get_llvm_type(const Type &type) {
     if (llvm::isa<BoolType>(type)) {
         return llvm::Type::getInt1Ty(context);
+    } else if (llvm::isa<Int32Type>(type)) {
+        return llvm::Type::getInt32Ty(context);
     } else if (llvm::isa<DoubleType>(type)) {
         return llvm::Type::getDoubleTy(context);
     } else if (llvm::isa<VoidType>(type)) {
@@ -85,6 +87,62 @@ llvm::Type *IRGenerator::get_llvm_type(const Type &type) {
     } else {
         return nullptr;
     }
+}
+
+llvm::Value *IRGenerator::arit_cast(llvm::Value *val, const Type &from,
+                                    const Type &to) {
+    using TypeKind = Type::TypeKind;
+
+    if (from.getKind() == to.getKind())
+        return val;
+
+    // This really is a mess. There should be a better way of doing things
+    switch (from.getKind()) {
+        case TypeKind::Bool:
+            switch (to.getKind()) {
+                case TypeKind::Int32:
+                    return builder.CreateIntCast(val, get_llvm_type(to),
+                                                 false);
+                case TypeKind::Double:
+                    return builder.CreateUIToFP(val, get_llvm_type(to));
+                default:
+                    break;
+            }
+            break;
+        case TypeKind::Int32:
+            switch (to.getKind()) {
+                case TypeKind::Bool:
+                    return builder.CreateIntCast(val, get_llvm_type(to), true);
+                case TypeKind::Double:
+                    std::printf("immernoch nice nice nice\n");
+                    return builder.CreateSIToFP(val, get_llvm_type(to));
+                default:
+                    break;
+            }
+            break;
+        case TypeKind::Double:
+            switch (to.getKind()) {
+                case TypeKind::Bool:
+                    return builder.CreateFPToUI(val, get_llvm_type(to));
+                case TypeKind::Int32:
+                    return builder.CreateFPToSI(val, get_llvm_type(to));
+                default:
+                    break;
+            }
+            break;
+        default:
+            break;
+    }
+    return nullptr;
+}
+
+void IRExprVis::visit(const LiteralExpr<int32_t> &expr) {
+    handle.reset();
+    handle = {llvm::ConstantInt::get(
+                      gen.context,
+                      llvm::APInt{32, static_cast<uint64_t>(expr.get_val()),
+                                  true}),
+              std::make_shared<Int32Type>()};
 }
 
 void IRExprVis::visit(const LiteralExpr<double> &expr) {
@@ -105,6 +163,11 @@ void IRExprVis::visit(const IdExpr &expr) {
     handle = gen.named_values[expr.get_id()];
 }
 
+bool is_arit(const Type &type) {
+    return llvm::isa<BoolType>(type) || llvm::isa<Int32Type>(type)
+           || llvm::isa<DoubleType>(type);
+}
+
 void IRExprVis::visit(const BinaryExpr &expr) {
     handle.reset();
 
@@ -114,37 +177,63 @@ void IRExprVis::visit(const BinaryExpr &expr) {
     if (!lhs.get_val() || !rhs.get_val())
         return;
 
-    if (!(llvm::isa<DoubleType>(*lhs.get_type())
-          && llvm::isa<DoubleType>(*rhs.get_type())))
+    if (!(is_arit(*lhs.get_type()) && is_arit(*rhs.get_type())))
         return Log::error(
                 "Both parameters of a binary expression must be of "
                 "type `double`");
 
-    // TODO: assignment operator
+    handle.type = lhs.get_type()->getKind() > rhs.get_type()->getKind()
+                          ? lhs.get_type()
+                          : rhs.get_type();
+
+    auto *lhs_val
+            = gen.arit_cast(lhs.get_val(), *lhs.get_type(), *handle.type);
+    auto *rhs_val
+            = gen.arit_cast(rhs.get_val(), *rhs.get_type(), *handle.type);
+
+    using BinaryOps = llvm::Instruction::BinaryOps;
+    bool is_fp = llvm::isa<DoubleType>(*handle.type);
+    bool is_signed = llvm::isa<Int32Type>(*handle.type);
+    bool is_cmp;
+
+    llvm::Instruction::BinaryOps op;
+    llvm::CmpInst::Predicate op_cmp;
+
     switch (expr.get_op()) {
         case Tok::PLUS:
-            handle.val = gen.builder.CreateFAdd(lhs.get_val(), rhs.get_val());
-            handle.type = lhs.get_type();
+            op = is_fp ? BinaryOps::FAdd : BinaryOps::Add;
+            is_cmp = false;
             break;
         case Tok::MINUS:
-            handle.val = gen.builder.CreateFSub(lhs.get_val(), rhs.get_val());
-            handle.type = lhs.get_type();
+            op = is_fp ? BinaryOps::FSub : BinaryOps::Sub;
+            is_cmp = false;
             break;
         case Tok::MULT:
-            handle.val = gen.builder.CreateFMul(lhs.get_val(), rhs.get_val());
-            handle.type = lhs.get_type();
+            op = is_fp ? BinaryOps::FMul : BinaryOps::Mul;
+            is_cmp = false;
             break;
         case Tok::SLASH:
-            handle.val = gen.builder.CreateFDiv(lhs.get_val(), rhs.get_val());
-            handle.type = lhs.get_type();
+            op = is_fp ? BinaryOps::FDiv
+                       : (is_signed ? BinaryOps::SDiv : BinaryOps::UDiv);
+            is_cmp = false;
             break;
         case Tok::CMP_LT:
-            handle.val = gen.builder.CreateFCmpULT(lhs.get_val(), rhs.get_val());
-            handle.type = std::make_shared<BoolType>();
+            op_cmp = is_fp ? llvm::CmpInst::Predicate::FCMP_ULT
+                           : (is_signed ? llvm::CmpInst::Predicate::ICMP_SLT
+                                        : llvm::CmpInst::Predicate::ICMP_ULT);
+            is_cmp = true;
             break;
         default:
             Log::error("Unknown binary operator");
-            break;
+            return;
+    }
+
+    if (is_cmp) {
+        handle.val = is_fp ? gen.builder.CreateFCmp(op_cmp, lhs_val, rhs_val)
+                           : gen.builder.CreateICmp(op_cmp, lhs_val, rhs_val);
+        handle.type = std::make_shared<BoolType>();
+    } else {
+        handle.val = gen.builder.CreateBinOp(op, lhs_val, rhs_val);
     }
 }
 
