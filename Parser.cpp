@@ -101,7 +101,7 @@ std::unique_ptr<Statement> Parser::parse_scope_body() {
         case Tok::L_INT32:
         case Tok::L_DOUBLE:
         case Tok::L_STR:
-            return parse_top_expr();
+            return parse_expr();
         default:
             return error_null("Expected variable declaration or expression");
     }
@@ -123,24 +123,7 @@ std::unique_ptr<VarDecl> Parser::parse_var_decl() {
     if (!expr)
         return nullptr;
 
-    if (lex.get_tok() != Tok::SEMICOLON)
-        return error_null("Expected semicolon `;`");
-
-    lex.get_next_tok();
     return std::make_unique<VarDecl>(id, std::move(expr));
-}
-
-std::unique_ptr<Expr> Parser::parse_top_expr() {
-    auto expr = parse_expr();
-
-    if (!expr)
-        return nullptr;
-
-    if (lex.get_tok() != Tok::SEMICOLON)
-        return error_null("Expected semicolon `;`");
-
-    lex.get_next_tok();
-    return expr;
 }
 
 std::unique_ptr<Expr> Parser::parse_expr() {
@@ -252,11 +235,19 @@ std::unique_ptr<ScopeExpr> Parser::parse_scope() {
     lex.get_next_tok();
 
     std::vector<std::unique_ptr<Statement>> body;
+    body.push_back(nullptr);
+
     while (lex.get_tok() != Tok::BR_CLOSE) {
-        auto statement = parse_scope_body();
-        if (!statement)
+        body.back() = parse_scope_body();
+        if (!body.back())
             return nullptr;
-        body.push_back(std::move(statement));
+
+        if (lex.get_tok() == Tok::SEMICOLON) {
+            lex.get_next_tok();
+            body.push_back(nullptr);
+        } else if (lex.get_tok() != Tok::BR_CLOSE) {
+            return error_null("Expected semicolon `;` or closing brace `}`");
+        }
     }
 
     lex.get_next_tok();

@@ -54,20 +54,24 @@ void IRGenerator::write_bitcode(std::ostream &stream) const {
 
 template <typename SetupT>
 IRHandle IRGenerator::gen_scope(const ScopeExpr &scope, SetupT setup) {
+    const auto &body = scope.get_body();
+
+    bool explicit_void = !body.empty() && !body.back();
+
     named_values.enter();
 
     setup();
 
     IRStatementVis body_vis{*this};
-    for (const auto &statement : scope.get_body()) {
-        statement->accept(body_vis);
+    for (auto i = body.begin(); i != (body.end() - explicit_void); ++i) {
+        (*i)->accept(body_vis);
         if (!body_vis.get_val())
             break;
     }
 
     named_values.exit();
 
-    if (scope.get_body().empty())
+    if (body.empty() || explicit_void)
         return {llvm::ConstantPointerNull::get(
                         llvm::Type::getInt8PtrTy(context)),  // Stub value
                 std::make_shared<VoidType>()};
@@ -114,7 +118,6 @@ llvm::Value *IRGenerator::arit_cast(llvm::Value *val, const Type &from,
                 case TypeKind::Bool:
                     return builder.CreateIntCast(val, get_llvm_type(to), true);
                 case TypeKind::Double:
-                    std::printf("immernoch nice nice nice\n");
                     return builder.CreateSIToFP(val, get_llvm_type(to));
                 default:
                     break;

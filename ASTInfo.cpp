@@ -82,10 +82,10 @@ void SynInfoVis::visit(const FnDef &def) {
     str.pop_back();
     str += " {";
 
-    for (const auto &statement : def.get_body()) {
-        statement->accept(vis);
-        str += "\n    " + vis.get_str();
-    }
+    //for (const auto &statement : def.get_body()) {
+        //statement->accept(vis);
+        //str += "\n    " + vis.get_str();
+    //}
 
     str += "\n}";
 }
