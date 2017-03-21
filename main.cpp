@@ -1,5 +1,4 @@
 #include "AST.hpp"
-#include "ASTInfo.hpp"
 #include "IRGenerator.hpp"
 #include "Lexer.hpp"
 #include "Parser.hpp"
@@ -31,10 +30,6 @@ int main(int argc, char** argv) {
     IRStatementVis vis_code{gen};
 
     while (std::unique_ptr<Statement> ast = par.parse()) {
-        SynInfoVis vis_info;
-        ast->accept(vis_info);
-        std::printf("Info:\n%s\n", vis_info.get_str().c_str());
-
         ast->accept(vis_code);
         if (vis_code.get_val() == nullptr) {
             break;
