@@ -327,11 +327,17 @@ void IRExprVis::visit(const IfExpr &expr) {
     if (!type)
         return Log::error("Invalid type");
 
-    auto *phi = gen.builder.CreatePHI(type, 2);
-    phi->addIncoming(then_val.val, then);
-    phi->addIncoming(else_val.val, or_else);
+    llvm::Value *result;
+    if(llvm::isa<VoidType>(*then_val.type)) {
+        result = then_val.val;
+    } else {
+        auto *phi = gen.builder.CreatePHI(type, 2);
+        phi->addIncoming(then_val.val, then);
+        phi->addIncoming(else_val.val, or_else);
+        result = phi;
+    }
 
-    handle = {phi, then_val.type};
+    handle = {result, then_val.type};
 }
 
 void IRStatementVis::visit(const Expr &expr) {
