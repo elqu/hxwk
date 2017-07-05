@@ -30,8 +30,8 @@ std::unique_ptr<Statement> Parser::parse() {
     }
 }
 
-// Differs from the other functions as it does not expect its first toke to be
-// valied.
+// Differs from the other functions as it does not expect its first token to be
+// valid.
 std::unique_ptr<Type> Parser::parse_type() {
     if (lex.get_tok() != Tok::ID)
         return error_null("Expected type identifier");
