@@ -7,13 +7,12 @@ fn collatz(n: i32) -> void {
 
     if n < 2 {
     } else {
-        let next = if odd(n) {3 * n + 1} else {n / 2};
-        collatz(next)
+        collatz(if odd(n) {3 * n + 1} else {n / 2})
     }
 }
 
 fn main() -> void {
     let x = 39086;
     collatz(x);
-    printf("\n");   
+    printf("\n");
 }

@@ -4,7 +4,7 @@ fn fac(a: i32) -> i32 {
     } else {
         a * fac(a - 1)
     }
-} 
+}
 
 fn main() -> void {
     let x = 6;
